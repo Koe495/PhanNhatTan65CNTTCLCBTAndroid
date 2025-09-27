@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginTop="-70dp">
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/background_image"
+        android:contentDescription="@string/title" />
+
+    <LinearLayout
+        android:id="@+id/signup_title_layout"
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="24dp"
+        android:layout_marginBottom="508dp">
+
+        <TextView
+            android:id="@+id/signup_title"
+            android:layout_width="153dp"
+            android:layout_height="54dp"
+            android:fontFamily="@font/rubik_medium"
+            android:text="@string/title"
+            android:textSize="38sp" />
+
+        <View
+            android:layout_width="74dp"
+            android:layout_height="5dp"
+            android:background="#FF8383" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/email"
+        android:layout_width="343dp"
+        android:layout_height="62dp"
+        android:layout_alignTop="@+id/signup_title_layout"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="90dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="22dp"
+            android:text="@string/email" />
+
+        <EditText
+            android:id="@+id/emailInput"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:autofillHints="Email address"
+            android:backgroundTint="#FF8383"
+            android:drawableStart="@drawable/email_icon"
+            android:fontFamily="@font/rubik"
+            android:hint="  |  demo@email.com"
+            android:inputType="textEmailAddress"
+            android:paddingTop="1dp"
+            android:gravity="center_vertical"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/phone"
+        android:layout_width="343dp"
+        android:layout_height="62dp"
+        android:layout_alignTop="@+id/email"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="80dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="22dp"
+            android:text="@string/phone" />
+
+        <EditText
+            android:id="@+id/phoneInput"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:autofillHints="Phone number"
+            android:backgroundTint="#FF8383"
+            android:drawableStart="@drawable/phone_icon"
+            android:fontFamily="@font/rubik"
+            android:hint="  |  +00 000-000-000"
+            android:inputType="phone"
+            android:paddingTop="1dp"
+            android:gravity="center_vertical"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/password"
+        android:layout_width="343dp"
+        android:layout_height="62dp"
+        android:layout_alignTop="@+id/phone"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="80dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="22dp"
+            android:text="@string/password" />
+
+        <EditText
+            android:id="@+id/passwordInput"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:autofillHints="Password"
+            android:backgroundTint="#FF8383"
+            android:drawableStart="@drawable/lock_icon"
+            android:fontFamily="@font/rubik"
+            android:hint="  |  Enter your password"
+            android:inputType="textPassword"
+            android:paddingTop="1dp"
+            android:gravity="center_vertical"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/confirmPass"
+        android:layout_width="343dp"
+        android:layout_height="62dp"
+        android:layout_alignTop="@+id/password"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="80dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="22dp"
+            android:text="@string/password_confirm" />
+
+        <EditText
+            android:id="@+id/confirmPasswordInput"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:backgroundTint="#FF8383"
+            android:drawableStart="@drawable/lock_icon"
+            android:fontFamily="@font/rubik"
+            android:autofillHints="Confirm your password"
+            android:hint="  |  Confirm your password"
+            android:inputType="textPassword"
+            android:paddingTop="1dp"
+            android:gravity="center_vertical"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/button"
+        android:layout_width="343dp"
+        android:layout_height="49dp"
+        android:layout_alignTop="@+id/confirmPass"
+        android:layout_centerInParent="true"
+        android:layout_marginTop="100dp"
+        android:backgroundTint="#FF8383"
+        android:fontFamily="@font/rubik_medium"
+        android:text="@string/create_account"
+        android:textAlignment="center"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="213dp"
+        android:layout_height="40dp"
+        android:layout_alignTop="@id/button"
+        android:layout_marginTop="70dp"
+        android:layout_centerHorizontal="true">
+
+        <TextView
+            android:layout_width="170dp"
+            android:layout_height="match_parent"
+            android:text="@string/have_account"
+            android:textAlignment="viewStart"
+            android:textSize="14sp" />
+
+        <Button
+            android:layout_width="70dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="-7dp"
+            android:layout_marginTop="-17dp"
+            android:background="@android:color/transparent"
+            android:fontFamily="@font/rubik"
+            android:paddingLeft="0dp"
+            android:paddingRight="0dp"
+            android:text="@string/login"
+            android:textAlignment="viewStart"
+            android:textColor="#FF8383"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+</RelativeLayout>
