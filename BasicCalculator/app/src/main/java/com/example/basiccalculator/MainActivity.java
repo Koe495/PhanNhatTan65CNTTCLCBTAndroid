@@ -11,11 +11,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import com.example.basiccalculator.R;
-import com.google.android.material.button.MaterialButton;
 
 public class MainActivity extends AppCompatActivity {
     private String selectedOperation = null;
-    private MaterialButton lastSelectedButton = null;
+    private Button lastSelectedButton = null;
 
     EditText editTextA, editTextB;
     TextView resultText;
@@ -38,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
         View.OnClickListener operationClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                MaterialButton clickedButton = (MaterialButton) view;
+                Button clickedButton = (Button) view;
                 selectedOperation = clickedButton.getText().toString();
                 highlightSelectedButton(clickedButton);
             }
@@ -57,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void highlightSelectedButton(MaterialButton clickedButton) {
+    private void highlightSelectedButton(Button clickedButton) {
         if (lastSelectedButton != null) {
             lastSelectedButton.setTypeface(Typeface.DEFAULT);
             lastSelectedButton.setBackgroundColor(ContextCompat.getColor(this, com.google.android.material.R.color.design_default_color_primary));
@@ -111,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             if (result != null) {
-                if (result == (long) result.doubleValue()) { // Kiểm tra số nguyên
+                if (result == (long) result.doubleValue()) { // Kiểm tra số lớn
                     resultText.setText("Kết quả: " + (long) result.doubleValue());
                 } else {
                     resultText.setText("Kết quả: " + result);
