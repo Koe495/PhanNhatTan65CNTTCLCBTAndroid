@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:background="@android:color/holo_blue_light">
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardView"
+        android:layout_width="360dp"
+        android:layout_height="400dp"
+        android:layout_marginTop="128dp"
+        app:cardBackgroundColor="@color/white"
+        app:cardCornerRadius="24dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.49"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="300dp"
+                android:layout_height="80dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="64dp"
+                android:orientation="horizontal">
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    app:cardCornerRadius="5dp">
+
+                    <ImageView
+                        android:id="@+id/flag1"
+                        android:layout_width="36dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/america_flag">
+
+                    </ImageView>
+                </androidx.cardview.widget.CardView>
+
+                <Spinner
+                    android:id="@+id/spinner1"
+                    android:layout_width="36dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1"
+                    android:background="@android:color/transparent"
+                    android:paddingLeft="0dp"
+                    android:paddingRight="0dp">
+
+                </Spinner>
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="150dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    app:cardBackgroundColor="#e6ecff"
+                    app:cardCornerRadius="10dp">
+
+                    <EditText
+                        android:id="@+id/edittext1"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:hint="Nhập số tiền"
+                        android:gravity="center"
+                        android:background="@android:color/transparent"
+                        android:inputType="number"/>
+                </androidx.cardview.widget.CardView>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="300dp"
+                android:layout_height="80dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="64dp"
+                android:orientation="horizontal">
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    app:cardCornerRadius="5dp">
+
+                    <ImageView
+                        android:id="@+id/flag2"
+                        android:layout_width="36dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/vietnam_flag">
+
+                    </ImageView>
+                </androidx.cardview.widget.CardView>
+
+                <Spinner
+                    android:id="@+id/spinner2"
+                    android:layout_width="36dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1"
+                    android:background="@android:color/transparent">
+
+                </Spinner>
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="150dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    app:cardBackgroundColor="#e6ecff"
+                    app:cardCornerRadius="10dp">
+
+                    <EditText
+                        android:id="@+id/edittext2"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:hint="Kết quả chuyển đổi"
+                        android:gravity="center"
+                        android:background="@android:color/transparent"
+                        android:inputType="number"/>
+                </androidx.cardview.widget.CardView>
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="368dp"
+        app:layout_constraintEnd_toEndOf="@+id/cardView"
+        app:layout_constraintStart_toStartOf="@+id/cardView"
+        app:layout_constraintTop_toTopOf="@+id/cardView"
+        app:cardBackgroundColor="#6f6fdc"
+        app:cardCornerRadius="20dp">
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/button1"
+            android:layout_width="200dp"
+            android:layout_height="64dp"
+            android:background="@android:color/transparent"
+            android:text="Transfer"
+            android:textColor="@color/white"
+            android:textSize="20sp" />
+    </androidx.cardview.widget.CardView>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,5 +1,6 @@
 package com.example.basiccalculator;
 
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.View;
@@ -59,11 +60,11 @@ public class MainActivity extends AppCompatActivity {
     private void highlightSelectedButton(Button clickedButton) {
         if (lastSelectedButton != null) {
             lastSelectedButton.setTypeface(Typeface.DEFAULT);
-            lastSelectedButton.setBackgroundColor(ContextCompat.getColor(this, com.google.android.material.R.color.design_default_color_primary));
+            lastSelectedButton.setBackgroundColor(Color.parseColor("#6200EE"));
         }
 
         clickedButton.setTypeface(Typeface.DEFAULT_BOLD);
-        clickedButton.setBackgroundColor(ContextCompat.getColor(this, com.google.android.material.R.color.design_default_color_primary_dark));
+        clickedButton.setBackgroundColor(Color.parseColor("#6200EE"));
 
         lastSelectedButton = clickedButton;
     }
