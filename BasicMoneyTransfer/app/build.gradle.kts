@@ -7,7 +7,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.basicmoneytransfer"
+        applicationId = "com.example.onlinemoneytransfer"
         minSdk = 27
         targetSdk = 36
         versionCode = 1

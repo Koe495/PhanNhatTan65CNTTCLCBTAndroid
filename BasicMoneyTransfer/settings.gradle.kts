@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "BasicMoneyTransfer"
+rootProject.name = "OnlineMoneyTransfer"
 include(":app")
  
