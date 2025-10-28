@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center_horizontal">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tính điểm trung bình môn học"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:layout_marginTop="20dp"/>
+
+    <EditText
+        android:id="@+id/edtDiemGiuaKy"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:hint="Điểm Giữa kỳ (50%)"
+        android:inputType="numberDecimal" />
+
+    <EditText
+        android:id="@+id/edtDiemCuoiKy"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:hint="Điểm Thi cuối kỳ (50%)"
+        android:inputType="numberDecimal" />
+
+    <Button
+        android:id="@+id/btnTinhTB"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Tính điểm TB" />
+
+    <TextView
+        android:id="@+id/tvKetQua"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:text="Hiện kết quả ở đây"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:textColor="@android:color/holo_blue_dark"/>
+    <Button
+        android:id="@+id/btnQuayLaiMain"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Về Màn Hình Chính"
+        android:layout_marginTop="16dp"/>
+</LinearLayout>
