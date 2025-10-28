@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center_horizontal"
+    tools:context=".MainActivity">
+
+    <ImageView
+        android:id="@+id/imgLogo"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:src="" />
+
+    <ImageView
+    android:id="@+id/imgBanner"
+    android:layout_width="match_parent"
+    android:layout_height="150dp"
+    android:layout_marginTop="16dp"
+    android:background="#E0E0E0"
+    android:contentDescription="Ảnh" />
+
+    <Button
+        android:id="@+id/btnChucNang2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Chức năng 2 (Tính điểm)" />
+
+    <Button
+        android:id="@+id/btnChucNang3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="Chức năng 3 (DS Môn)" />
+
+    <Button
+        android:id="@+id/btnChucNang4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="Chức năng 4 (Hoạt động)" />
+
+    <Button
+        android:id="@+id/btnAboutMe"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="About Me" />
+
+</LinearLayout>
