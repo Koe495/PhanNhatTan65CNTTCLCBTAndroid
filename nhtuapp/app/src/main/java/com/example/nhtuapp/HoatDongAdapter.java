@@ -1,5 +1,7 @@
 package com.example.nhtuapp;
 
+import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,7 +43,7 @@ public class HoatDongAdapter extends RecyclerView.Adapter<HoatDongAdapter.HoatDo
     }
 
     // ViewHolder giữ 3 View
-    public static class HoatDongViewHolder extends RecyclerView.ViewHolder {
+    public class HoatDongViewHolder extends RecyclerView.ViewHolder {
         ImageView imgAnhDaiDien;
         TextView tvTieuDe;
         TextView tvThoiGian;
@@ -51,6 +53,30 @@ public class HoatDongAdapter extends RecyclerView.Adapter<HoatDongAdapter.HoatDo
             imgAnhDaiDien = itemView.findViewById(R.id.imgAnhDaiDien);
             tvTieuDe = itemView.findViewById(R.id.tvTieuDe);
             tvThoiGian = itemView.findViewById(R.id.tvThoiGian);
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int position = getAdapterPosition(); // Lấy vị trí item được click
+                    if (position != RecyclerView.NO_POSITION) {
+                        // Lấy đúng đối tượng HoatDong được click
+                        HoatDong clickedItem = hoatDongList.get(position);
+
+                        // Lấy Context từ View
+                        Context context = v.getContext();
+
+                        // Tạo Intent để mở Activity chi tiết
+                        Intent intent = new Intent(context, ChiTietHoatDongActivity.class);
+
+                        // Đóng gói dữ liệu để gửi đi
+                        intent.putExtra("TIEU_DE", clickedItem.getTieuDe());
+                        intent.putExtra("NOI_DUNG", clickedItem.getNoiDung());
+                        // Bạn có thể gửi thêm thời gian, ảnh... nếu muốn
+
+                        // Bắt đầu Activity mới
+                        context.startActivity(intent);
+                    }
+                }
+            });
         }
     }
 }

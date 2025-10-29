@@ -53,12 +53,25 @@ public class HoatDongActivity extends AppCompatActivity {
 
     private void taoDuLieuAo() {
         dataHoatDong = new ArrayList<>();
-        // Tạo các đối tượng HoatDong
-        // Nhớ dùng ảnh placeholder bạn đã thêm vào drawable
-        dataHoatDong.add(new HoatDong("Tiêu đề hoạt động 1", "08:00 - 20/10/2025", R.drawable.placeholder));
-        dataHoatDong.add(new HoatDong("Lễ khai giảng năm học mới", "07:30 - 05/09/2025", R.drawable.placeholder));
-        dataHoatDong.add(new HoatDong("Hội thao sinh viên", "Cả ngày - 26/03/2026", R.drawable.placeholder));
-        dataHoatDong.add(new HoatDong("Tiêu đề hoạt động 4", "14:00 - 30/11/2025", R.drawable.placeholder));
-        dataHoatDong.add(new HoatDong("Tiêu đề hoạt động 5", "19:00 - 24/12/2025", R.drawable.placeholder));
+
+        // Thêm tham số thứ 4 (noiDung)
+        dataHoatDong.add(new HoatDong(
+                "Lễ khai giảng năm học mới",
+                "07:30 - 05/09/2025",
+                R.drawable.placeholder,
+                "Đây là nội dung chi tiết cho Lễ khai giảng. Sinh viên tập trung tại sân A..."
+        ));
+        dataHoatDong.add(new HoatDong(
+                "Hội thao sinh viên",
+                "Cả ngày - 26/03/2026",
+                R.drawable.placeholder,
+                "Nội dung chi tiết hội thao. Các môn thi đấu bao gồm: Kéo co, nhảy bao bố..."
+        ));
+        dataHoatDong.add(new HoatDong(
+                "Tiêu đề hoạt động 3",
+                "14:00 - 30/11/2025",
+                R.drawable.placeholder,
+                "Nội dung chi tiết của hoạt động 3."
+        ));
     }
 }

@@ -3,22 +3,24 @@ package com.example.nhtuapp;
 public class HoatDong {
     private String tieuDe;
     private String thoiGian;
-    private int anhDaiDien; // Dùng int để lưu ID từ drawable
+    private int anhDaiDien;
+    private String noiDung; // <-- THÊM DÒNG NÀY
 
-    public HoatDong(String tieuDe, String thoiGian, int anhDaiDien) {
+    // Cập nhật Constructor
+    public HoatDong(String tieuDe, String thoiGian, int anhDaiDien, String noiDung) {
         this.tieuDe = tieuDe;
         this.thoiGian = thoiGian;
         this.anhDaiDien = anhDaiDien;
+        this.noiDung = noiDung; // <-- THÊM DÒNG NÀY
     }
 
-    // Tạo các hàm Getters
-    public String getTieuDe() {
-        return tieuDe;
+    // Tạo Getter cho noiDung
+    public String getNoiDung() {
+        return noiDung;
     }
-    public String getThoiGian() {
-        return thoiGian;
-    }
-    public int getAnhDaiDien() {
-        return anhDaiDien;
-    }
+
+    // Các getter cũ
+    public String getTieuDe() { return tieuDe; }
+    public String getThoiGian() { return thoiGian; }
+    public int getAnhDaiDien() { return anhDaiDien; }
 }

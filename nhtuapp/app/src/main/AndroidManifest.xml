@@ -12,6 +12,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Nhtuapp">
         <activity
+            android:name=".ViewItemHoatDong"
+            android:exported="false" />
+        <activity
             android:name=".AboutMeActivity"
             android:exported="false" />
         <activity
