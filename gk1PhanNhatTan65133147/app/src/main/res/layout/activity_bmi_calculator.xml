@@ -20,7 +20,7 @@
         android:id="@+id/edtChieuCao"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Chiều cao (ví dụ: 1.75)"
+        android:hint="Chiều cao"
         android:inputType="numberDecimal"
         android:layout_marginBottom="16dp"/>
 
@@ -28,7 +28,7 @@
         android:id="@+id/edtCanNang"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Cân nặng (ví dụ: 60)"
+        android:hint="Cân nặng"
         android:inputType="numberDecimal"
         android:layout_marginBottom="24dp"/>
 
