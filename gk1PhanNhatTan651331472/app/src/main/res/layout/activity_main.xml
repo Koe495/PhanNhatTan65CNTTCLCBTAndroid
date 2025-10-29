@@ -25,6 +25,7 @@
         android:layout_marginEnd="8dp"
         android:background="#D3D3D3"
         android:contentDescription="Ảnh"
+        android:src="@drawable/bann"
         app:layout_constraintHorizontal_weight="1"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/buttonGroup"
