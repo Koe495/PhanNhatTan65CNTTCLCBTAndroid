@@ -6,7 +6,7 @@
     android:orientation="vertical">
 
     <TextView
-        android:id="@+id/tvFood"
+        android:id="@+id/tvMonAn"
         android:layout_width="match_parent"
         android:layout_height="40dp"
         android:text="Món ăn"

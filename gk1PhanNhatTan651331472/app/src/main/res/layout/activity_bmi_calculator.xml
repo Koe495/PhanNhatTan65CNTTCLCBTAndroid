@@ -20,7 +20,7 @@
         android:id="@+id/edtChieuCao"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Chiều cao"
+        android:hint="Chiều cao (cm)"
         android:inputType="numberDecimal"
         android:layout_marginBottom="16dp"/>
 
@@ -28,7 +28,7 @@
         android:id="@+id/edtCanNang"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Cân nặng"
+        android:hint="Cân nặng (kg)"
         android:inputType="numberDecimal"
         android:layout_marginBottom="24dp"/>
 
@@ -54,5 +54,12 @@
         android:text="Phân loại: "
         android:textSize="18sp"
         android:layout_marginTop="8dp"/>
+
+    <Button
+        android:id="@+id/btnQuayLaiMain"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="320dp"
+        android:text="Về Màn Hình Chính" />
 
 </LinearLayout>

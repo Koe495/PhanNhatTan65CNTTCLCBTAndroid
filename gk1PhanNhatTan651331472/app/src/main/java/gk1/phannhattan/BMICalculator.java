@@ -15,6 +15,7 @@ public class BMICalculator extends AppCompatActivity {
     EditText edtChieuCao, edtCanNang;
     Button btnTinhBmi;
     TextView tvKetQuaBmi, tvPhanLoaiBmi;
+    Button btnQuayLaiMain;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +37,14 @@ public class BMICalculator extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 tinhToanBmi();
+            }
+        });
+        btnQuayLaiMain = findViewById(R.id.btnQuayLaiMain);
+
+        btnQuayLaiMain.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
             }
         });
     }
@@ -60,7 +69,7 @@ public class BMICalculator extends AppCompatActivity {
 
             double bmi = canNang / (chieuCao * chieuCao);
 
-            DecimalFormat df = new DecimalFormat("#.0"); // Làm tròn 1 chữ số
+            DecimalFormat df = new DecimalFormat("#.0");
             tvKetQuaBmi.setText("Kết quả BMI: " + df.format(bmi));
 
             phanLoaiBmi(bmi);

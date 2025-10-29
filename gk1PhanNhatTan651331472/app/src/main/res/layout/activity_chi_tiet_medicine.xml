@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tvTieuDeChiTiet"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Tiêu đề"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:padding="16dp"
+        android:gravity="center_horizontal"/>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="603dp">
+
+        <TextView
+            android:id="@+id/tvNoiDungChiTiet"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:text="Nội dung..."
+            android:textSize="16sp" />
+
+    </ScrollView>
+    <Button
+        android:id="@+id/btnQuayLaiMain"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Về Màn Hình Chính" />
+</LinearLayout>
