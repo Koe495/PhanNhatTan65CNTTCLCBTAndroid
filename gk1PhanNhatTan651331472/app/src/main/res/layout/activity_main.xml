@@ -75,6 +75,14 @@
             android:text="Giới thiệu"
             android:layout_marginTop="16dp" />
 
+        <Button
+            android:id="@+id/btnMoney"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:text="Chuyển đổi giá tiền"
+            android:layout_marginTop="16dp" />
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

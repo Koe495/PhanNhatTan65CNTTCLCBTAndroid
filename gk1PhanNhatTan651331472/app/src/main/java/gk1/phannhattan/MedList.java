@@ -53,7 +53,7 @@ public class MedList extends AppCompatActivity {
         btnQuayLaiMain.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                finish();
+                startActivity(new Intent(MedList.this, MainActivity.class));
             }
         });
     }

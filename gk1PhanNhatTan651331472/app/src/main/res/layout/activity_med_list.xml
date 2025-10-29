@@ -11,12 +11,13 @@
         android:textSize="22sp"
         android:textStyle="bold"
         android:padding="16dp"
+        android:layout_marginTop="32dp"
         android:gravity="center_horizontal"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvThuoc"
         android:layout_width="match_parent"
-        android:layout_height="601dp" />
+        android:layout_height="558dp" />
 
     <Button
         android:id="@+id/btnQuayLaiMain"

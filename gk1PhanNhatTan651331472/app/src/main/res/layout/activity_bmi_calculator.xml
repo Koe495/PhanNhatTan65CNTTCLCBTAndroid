@@ -14,6 +14,7 @@
         android:text="Tính chỉ số BMI"
         android:textSize="24sp"
         android:textStyle="bold"
+        android:layout_marginTop="32dp"
         android:layout_marginBottom="32dp"/>
 
     <EditText
@@ -59,7 +60,7 @@
         android:id="@+id/btnQuayLaiMain"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="320dp"
+        android:layout_marginTop="282dp"
         android:text="Về Màn Hình Chính" />
 
 </LinearLayout>

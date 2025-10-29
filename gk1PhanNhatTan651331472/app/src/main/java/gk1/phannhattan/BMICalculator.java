@@ -1,6 +1,8 @@
 package gk1.phannhattan;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
@@ -44,7 +46,7 @@ public class BMICalculator extends AppCompatActivity {
         btnQuayLaiMain.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                finish();
+                startActivity(new Intent(BMICalculator.this, MainActivity.class));
             }
         });
     }
