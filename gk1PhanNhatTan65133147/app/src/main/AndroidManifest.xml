@@ -12,7 +12,16 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Gk1PhanNhatTan65133147">
         <activity
-            android:name=".BMI_Calculator"
+            android:name=".Profile"
+            android:exported="false" />
+        <activity
+            android:name=".MedList"
+            android:exported="false" />
+        <activity
+            android:name=".FoodList"
+            android:exported="false" />
+        <activity
+            android:name=".BMICalculator"
             android:exported="false" />
         <activity
             android:name=".MainActivity"
