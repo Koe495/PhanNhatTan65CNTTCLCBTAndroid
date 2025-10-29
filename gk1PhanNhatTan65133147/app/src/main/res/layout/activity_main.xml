@@ -47,27 +47,31 @@
         <Button
             android:id="@+id/btnChucNang2"
             android:layout_width="match_parent"
-            android:layout_height="100dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:text="BMI" />
 
         <Button
             android:id="@+id/btnChucNang3"
             android:layout_width="match_parent"
-            android:layout_height="100dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:text="Món ăn"
             android:layout_marginTop="16dp" />
 
         <Button
             android:id="@+id/btnChucNang4"
             android:layout_width="match_parent"
-            android:layout_height="100dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:text="Bài thuốc"
             android:layout_marginTop="16dp" />
 
         <Button
             android:id="@+id/btnAboutMe"
             android:layout_width="match_parent"
-            android:layout_height="100dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:text="Giới thiệu"
             android:layout_marginTop="16dp" />
 
