@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
         database.execSQL(sqlDeleteTable);
         database.execSQL(sqlCreateTable);
 
-        String sqlInsert1 = "INSERT INTO BOOKS(Page, Price, Title, Author) VALUES(200, 20, 'Java Android 1', 'Tony')";
+        String sqlInsert1 = "INSERT INTO BOOKS(Page, Price, Title, Author) VALUES(200, 20, 'Java Android 1', 'TanPhan')";
         String sqlInsert2 = "INSERT INTO BOOKS(Page, Price, Title, Author) VALUES(400, 30, 'Support guide', 'Koe')";
         database.execSQL(sqlInsert1);
         database.execSQL(sqlInsert2);
