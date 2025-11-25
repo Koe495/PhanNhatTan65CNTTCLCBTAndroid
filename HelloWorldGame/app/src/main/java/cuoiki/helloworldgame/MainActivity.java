@@ -14,21 +14,28 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import java.util.Random;
 
-import cuoiki.helloworldgame.databinding.ActivityMainBinding;
-
 public class MainActivity extends AppCompatActivity {
 
-    private ActivityMainBinding binding;
     private GameView gameView;
     private RecognitionManager recognitionManager;
+    private FrameLayout rootContainer;
+    private FrameLayout gameContainer;
+    private TextView tvHelloWorld;
+    private TextView tvScore;
+    private TextView tvDiff;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
-
-        binding.tvHelloWorld.setOnClickListener(new View.OnClickListener() {
+        
+        setContentView(R.layout.activity_main);
+        rootContainer = findViewById(R.id.rootContainer);
+        gameContainer = findViewById(R.id.gameContainer);
+        tvHelloWorld = findViewById(R.id.tvHelloWorld);
+        tvScore = findViewById(R.id.tvScore);
+        tvDiff = findViewById(R.id.tvDiff);
+        
+        tvHelloWorld.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startOpeningAnimation();
@@ -42,11 +49,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void startOpeningAnimation() {
         // Ẩn chữ gốc
-        binding.tvHelloWorld.setVisibility(View.INVISIBLE);
+        tvHelloWorld.setVisibility(View.INVISIBLE);
 
-        String text = "hello world";
+        String text = tvHelloWorld.getText().toString();
         int[] location = new int[2];
-        binding.tvHelloWorld.getLocationOnScreen(location);
+        tvHelloWorld.getLocationOnScreen(location);
 
         int currentX = location[0];
         final int startY = location[1];
@@ -73,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
             params.topMargin = startY;
             params.gravity = Gravity.TOP | Gravity.START;
 
-            binding.rootContainer.addView(charView, params);
+            rootContainer.addView(charView, params);
 
             // Đo độ rộng từng chữ
             charView.measure(0, 0);
@@ -94,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     charView.animate()
-                            .translationY(binding.rootContainer.getHeight() - startY)
+                            .translationY(rootContainer.getHeight() - startY)
                             .rotation(random.nextInt(360))
                             .alpha(0)
                             .setDuration(850 + random.nextInt(500))
@@ -106,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
                                         initGame();
                                     }
                                     // Tiêu huỷ hàng giả sau khi dùng
-                                    binding.rootContainer.removeView(charView);
+                                    rootContainer.removeView(charView);
                                 }
                             });
                 }
@@ -116,14 +123,14 @@ public class MainActivity extends AppCompatActivity {
 
     // UI GAME
     private void initGame() {
-        binding.gameContainer.setVisibility(View.VISIBLE);
-        binding.tvScore.setVisibility(View.VISIBLE);
-        binding.tvDiff.setVisibility(View.VISIBLE);
+        gameContainer.setVisibility(View.VISIBLE);
+        tvScore.setVisibility(View.VISIBLE);
+        tvDiff.setVisibility(View.VISIBLE);
 
         gameView = new GameView(this);
         // Truyền AI vào GameView
         gameView.setRecognitionManager(recognitionManager);
-        binding.gameContainer.addView(gameView);
+        gameContainer.addView(gameView);
 
         gameView.setGameOverListener(new GameView.GameOverListener() {
             @Override
@@ -131,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        binding.tvScore.setText("Score: " + score);
+                        tvScore.setText("Score: " + score);
                     }
                 });
             }
@@ -141,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        binding.tvDiff.setText("Diff: " + diff);
+                        tvDiff.setText("Diff: " + diff);
                     }
                 });
             }
@@ -152,8 +159,8 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         Toast.makeText(MainActivity.this, "GAME OVER!", Toast.LENGTH_LONG).show();
-                        binding.gameContainer.removeAllViews();
-                        binding.tvHelloWorld.setVisibility(View.VISIBLE);
+                        gameContainer.removeAllViews();
+                        tvHelloWorld.setVisibility(View.VISIBLE);
                     }
                 });
             }
@@ -164,9 +171,9 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         Toast.makeText(MainActivity.this, "YOU WIN!", Toast.LENGTH_LONG).show();
-                        binding.gameContainer.removeAllViews();
-                        binding.tvHelloWorld.setVisibility(View.VISIBLE);
-                        binding.tvHelloWorld.setText("YOU WIN!");
+                        gameContainer.removeAllViews();
+                        tvHelloWorld.setVisibility(View.VISIBLE);
+                        tvHelloWorld.setText("YOU WIN!");
                     }
                 });
             }

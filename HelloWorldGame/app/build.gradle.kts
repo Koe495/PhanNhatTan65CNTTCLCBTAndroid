@@ -44,4 +44,5 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     implementation("com.google.mlkit:digital-ink-recognition:19.0.0")
+    implementation("com.google.mlkit:common:18.11.0")
 }

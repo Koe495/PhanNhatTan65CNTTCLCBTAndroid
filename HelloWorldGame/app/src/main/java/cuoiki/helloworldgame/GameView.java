@@ -11,7 +11,9 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
-import com.google.mlkit.vision.digitalink.Ink;
+
+import com.google.mlkit.vision.digitalink.recognition.Ink;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
