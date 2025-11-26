@@ -3,7 +3,10 @@ package cuoiki.helloworldgame;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.graphics.Color;
+import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Handler;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,12 +15,16 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+
+import java.time.format.TextStyle;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
     private GameView gameView;
     private RecognitionManager recognitionManager;
+    private MediaPlayer mediaPlayer;
+    private boolean isPhase2MusicPlaying = false;
     private FrameLayout rootContainer;
     private FrameLayout gameContainer;
     private TextView tvHelloWorld;
@@ -46,7 +53,27 @@ public class MainActivity extends AppCompatActivity {
         recognitionManager = new RecognitionManager();
         recognitionManager.downloadModel();
     }
+    // Hàm phát nhạc
+    private void playMusic(int resourceId) {
+        // Nếu đang có nhạc thì dừng và giải phóng
+        stopMusic();
 
+        // Tạo media player mới
+        mediaPlayer = MediaPlayer.create(this, resourceId);
+        mediaPlayer.setLooping(true); // Lặp lại nhạc
+        mediaPlayer.start();
+    }
+
+    // Hàm dừng nhạc
+    private void stopMusic() {
+        if (mediaPlayer != null) {
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.stop();
+            }
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
+    }
     private void startOpeningAnimation() {
         // Ẩn chữ gốc
         tvHelloWorld.setVisibility(View.INVISIBLE);
@@ -121,6 +148,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
     // UI GAME
     private void initGame() {
         gameContainer.setVisibility(View.VISIBLE);
@@ -131,6 +159,9 @@ public class MainActivity extends AppCompatActivity {
         // Truyền AI vào GameView
         gameView.setRecognitionManager(recognitionManager);
         gameContainer.addView(gameView);
+
+        playMusic(R.raw.carefree);
+        isPhase2MusicPlaying = false; // Reset
 
         gameView.setGameOverListener(new GameView.GameOverListener() {
             @Override
@@ -158,6 +189,7 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        stopMusic();
                         Toast.makeText(MainActivity.this, "GAME OVER!", Toast.LENGTH_LONG).show();
                         gameContainer.removeAllViews();
                         tvHelloWorld.setVisibility(View.VISIBLE);
@@ -177,12 +209,104 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
             }
+            @Override
+            public void onPhase2Start() {
+                Log.d("PHASE2", "Triggered");
+                runOnUiThread(this::startPhase2Effect);
+            }
+
+            private void startPhase2Effect() {
+                // Tạm dừng game logic
+                gameView.pauseGame();
+
+
+                // Đổi nhac
+                stopMusic();
+                playMusic(R.raw.azali_phase2);
+                isPhase2MusicPlaying = true;
+
+                final Random random = new Random();
+
+                // Spawn hiệu ứng trong 3 giây
+                long effectDuration = 3500;
+                long interval = 60; // spawn mỗi 60ms một chữ
+
+                final Handler handler = new Handler();
+                final long startTime = System.currentTimeMillis();
+
+                Runnable spawnTask = new Runnable() {
+                    @Override
+                    public void run() {
+                        long elapsed = System.currentTimeMillis() - startTime;
+
+                        if (elapsed >= effectDuration) {
+                            // Kết thúc phase effect
+                            gameView.resumeGame();
+                            return;
+                        }
+
+                        spawnRisingRedChar(random);
+                        handler.postDelayed(this, interval);
+                    }
+                };
+                handler.post(spawnTask);
+            }
         });
+    }
+    private void spawnRisingRedChar(Random random) {
+        final TextView charView = new TextView(this);
+
+        char randomChar = "!@#$%^&HELLhellHELL".charAt(random.nextInt(10));
+
+        charView.setText(String.valueOf(randomChar));
+        charView.setTextSize(32);
+        charView.setTextColor(Color.RED);
+        charView.setTypeface(null, android.graphics.Typeface.BOLD);
+
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+
+        // Xuất hiện từ đáy màn hình
+        params.leftMargin = random.nextInt(rootContainer.getWidth() - 50) + 25;
+        params.topMargin = rootContainer.getHeight() - 50;
+
+        rootContainer.addView(charView, params);
+
+        charView.bringToFront();
+        charView.setElevation(100f);
+
+        charView.animate()
+                .translationY(-rootContainer.getHeight())  // BAY NGƯỢC LÊN
+                .rotation(random.nextInt(360))
+                .setDuration(700 + random.nextInt(300))
+                .alpha(0)
+                .withEndAction(() -> rootContainer.removeView(charView));
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+            mediaPlayer.pause();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
+            mediaPlayer.start();
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        stopMusic();
         if (recognitionManager != null) {
             recognitionManager.close();
         }

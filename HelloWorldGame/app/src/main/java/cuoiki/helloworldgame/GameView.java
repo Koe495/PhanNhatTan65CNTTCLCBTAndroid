@@ -31,7 +31,7 @@ public class GameView extends View {
     private Path currentPath = new Path();
     private int score = 10;
     private int diff = 0;
-    private int phaseSkipDiff = 30;
+    private int phaseSkipDiff = 40;
     private boolean isGameOver = false;
     private Random random = new Random();
     private GameOverListener listener;
@@ -42,15 +42,30 @@ public class GameView extends View {
 
     private int screenWidth, screenHeight;
     private long lastSpawnTime = 0;
+    private long baseSpawnDelay = 2000;
+    private float baseSpeedParam = 3;
     private final String ENEMIES_CHARS = "_/<>^ZNMUJC"; // Quái thường
     private final String TARGET_FULL = "helloworld";   // Mục tiêu chính
+    int targetSpawnRate = 15; // Tỉ lệ sinh ra mục tiêu chinhs
     private int collectedIndex = 0; // Tổng số mục tiêu đã ghép
+    private boolean isPaused = false;
+    public int gamePhase = 1;
+
+    public void pauseGame() {
+        isPaused = true;
+    }
+
+    public void resumeGame() {
+        isPaused = false;
+    }
 
     public interface GameOverListener {
         void onScoreUpdate(int score);
         void onDiffUpdate(int diff);
         void onGameOver();
         void onGameWin();
+        void onPhase2Start();
+
     }
 
     public void setGameOverListener(GameOverListener listener) {
@@ -82,10 +97,12 @@ public class GameView extends View {
         hudPaintActive.setColor(Color.RED); // Chữ đã nhặt được màu đỏ
         hudPaintActive.setTextSize(50);
         hudPaintActive.setFakeBoldText(true);
-
         hudPaintInactive.setColor(Color.LTGRAY); // Chữ chưa nhặt màu xám
         hudPaintInactive.setTextSize(50);
         hudPaintInactive.setFakeBoldText(true);
+
+        // 4. Reset game phase
+        gamePhase = 1;
 
         startGameLoop();
     }
@@ -127,8 +144,11 @@ public class GameView extends View {
     }
 
     private void updateGame() {
+        if (gamePhase == 2) drawPaint.setColor(Color.RED);
+        if (isPaused) return;   // Dừng game hoàn toàn
+
         // Tính toán tốc độ spawn dựa trên diff
-        long currentSpawnDelay = Math.max(600, 2500 - (diff * 50));
+        long currentSpawnDelay = Math.max(600, baseSpawnDelay - (diff * 20));
 
         if (System.currentTimeMillis() - lastSpawnTime > currentSpawnDelay) {
 
@@ -142,7 +162,6 @@ public class GameView extends View {
             }
             String charToSpawn;
             boolean isTargetChar = false;
-            int targetSpawnRate = 20; // tỈ lệ sinh ra mục tiêu
             // Chỉ xuất hiện chữ cái chưa có
             boolean shouldSpawnTarget = !isTargetAlreadyOnScreen
                     && random.nextInt(100) < targetSpawnRate
@@ -153,14 +172,13 @@ public class GameView extends View {
                 char nextNeed = TARGET_FULL.charAt(collectedIndex);
 
                 // Phase 1: Chỉ cho phép spawm các chữ trong "hell"
-                // Phase 2: Chỉ cho phép spawn "oworld" sau khi diff >= 50
+                // Phase 2: Chỉ cho phép spawn "oworld" sau khi diff >= phase 2
 
                 boolean canSpawn = true;
-                if (collectedIndex >= 4 && diff < phaseSkipDiff) {
+                if (collectedIndex >= 4 && gamePhase == 1) {
                     // Đã nhặt đủ hell nhưng diff chưa đủ số skip
                     canSpawn = false;
                 }
-
                 if (canSpawn) {
                     charToSpawn = String.valueOf(nextNeed);
                     isTargetChar = true;
@@ -175,7 +193,7 @@ public class GameView extends View {
             }
 
             // Tính tốc độ rơi
-            float baseSpeed = 3 + (diff / 5.0f);
+            float baseSpeed = baseSpeedParam + (diff / 5.0f);
             float finalSpeed = baseSpeed + random.nextInt(3);
 
             fallingChars.add(new FallingChar(charToSpawn,
@@ -296,6 +314,7 @@ public class GameView extends View {
 
             // Mục tiêu chính
             if (fc.isTarget) {
+                if (textRaw.equals("0")) textRaw = "O";
                 if (fc.character.equals(textRaw)) isMatch = true;
             }
             // Quái thường
@@ -340,29 +359,26 @@ public class GameView extends View {
             if (isMatch) {
                 iter.remove();
 
-                // LOGIC GAME
+                // Logic tăng độ khó với mọi quái (thường hoặc target)
+                diff++;
+                if (listener != null) listener.onDiffUpdate(diff);
 
                 if (fc.isTarget) {
                     collectedIndex++;
 
-                    // Nếu vừa ghép đủ "hell" (index = 4)
-                    if (collectedIndex == 4) {
-                        diff = phaseSkipDiff;
+                    // CHUYỂN PHASE GAME
+                    if ((gamePhase == 1 && collectedIndex == 4) || (gamePhase == 1 && diff == phaseSkipDiff)) {
+                        gamePhase = 2; // Đánh dấu đã sang phase 2
+                        diff = phaseSkipDiff; // Cập nhật độ khó
+
+                        if (listener != null) listener.onPhase2Start();
                         Toast.makeText(getContext(), "YOU WANT HELL?", Toast.LENGTH_SHORT).show();
                     }
 
-                    // Nếu đã ghép đủ "helloworld" (index = 10)
                     if (collectedIndex >= TARGET_FULL.length()) {
                         isGameOver = true;
-                        if (listener != null) listener.onGameWin(); // Thắng rồi đó
+                        if (listener != null) listener.onGameWin();
                     }
-
-                } else {
-                    // Diệt quái thường
-                    if (listener != null) {
-                        listener.onDiffUpdate(diff);
-                    }
-                    diff++;
                 }
                 break;
             }
