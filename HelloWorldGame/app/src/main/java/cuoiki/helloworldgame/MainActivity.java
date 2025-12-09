@@ -24,6 +24,7 @@ public class MainActivity extends AppCompatActivity {
     private GameView gameView;
     private RecognitionManager recognitionManager;
     private MediaPlayer mediaPlayer;
+    private SoundManager soundManager;
     private boolean isPhase2MusicPlaying = false;
     private FrameLayout rootContainer;
     private FrameLayout gameContainer;
@@ -41,15 +42,19 @@ public class MainActivity extends AppCompatActivity {
         tvHelloWorld = findViewById(R.id.tvHelloWorld);
         tvScore = findViewById(R.id.tvScore);
         tvDiff = findViewById(R.id.tvDiff);
-        
+
+        soundManager = new SoundManager(this);
+
         tvHelloWorld.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // [MỚI] Phát tiếng click
+                soundManager.playClick();
+
                 startOpeningAnimation();
             }
         });
 
-        // Khởi tạo AI
         recognitionManager = new RecognitionManager();
         recognitionManager.downloadModel();
     }
@@ -158,6 +163,8 @@ public class MainActivity extends AppCompatActivity {
         gameView = new GameView(this);
         // Truyền AI vào GameView
         gameView.setRecognitionManager(recognitionManager);
+
+        gameView.setSoundManager(soundManager);
         gameContainer.addView(gameView);
 
         playMusic(R.raw.carefree);
@@ -256,7 +263,7 @@ public class MainActivity extends AppCompatActivity {
     private void spawnRisingRedChar(Random random) {
         final TextView charView = new TextView(this);
 
-        char randomChar = "!@#$%^&HELLhellHELL".charAt(random.nextInt(10));
+        char randomChar = "!@#$%^&HELLhellHELL".charAt(random.nextInt("!@#$%^&HELLhellHELL".length()));
 
         charView.setText(String.valueOf(randomChar));
         charView.setTextSize(32);
