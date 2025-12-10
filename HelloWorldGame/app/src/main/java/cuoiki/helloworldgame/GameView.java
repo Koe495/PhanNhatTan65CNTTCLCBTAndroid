@@ -5,11 +5,14 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Typeface;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
+
+import androidx.core.content.res.ResourcesCompat;
 
 import com.google.mlkit.vision.digitalink.recognition.Ink;
 
@@ -19,12 +22,12 @@ import java.util.Random;
 
 public class GameView extends View {
 
-    // --- HẰNG SỐ CẤU HÌNH ---
-    private static final String ENEMIES_CHARS = "_/<>^ZNMUJC";
+    // --- CONSTANTS ---
+    private static final String ENEMIES_CHARS = "_/>^ZNMUJC";
     private static final String TARGET_FULL = "helloworld";
     private static final int PHASE_SKIP_DIFF = 40;
     private static final long BASE_SPAWN_DELAY = 2000;
-    private static final int TARGET_SPAWN_RATE = 60;
+    private static final int TARGET_SPAWN_RATE = 20;
 
     // --- PAINTS ---
     private Paint textPaint = new Paint();
@@ -46,8 +49,15 @@ public class GameView extends View {
     private boolean isGameOver = false;
     private boolean isVictory = false;
     private boolean isPaused = false;
+    private long lastSpawnTime = 0;
+    private float baseSpeedParam = 3;
+    private int screenWidth, screenHeight;
 
-    // --- TOOLS ---
+    // --- CONFIGURATION ---
+    private GameTheme currentTheme;
+    private GameMode currentMode;
+
+    // --- UTILS ---
     private Random random = new Random();
     private Ink.Builder inkBuilder = Ink.builder();
     private Ink.Stroke.Builder strokeBuilder;
@@ -55,11 +65,7 @@ public class GameView extends View {
     private SoundManager soundManager;
     private GameOverListener listener;
 
-    private int screenWidth, screenHeight;
-    private long lastSpawnTime = 0;
-    private float baseSpeedParam = 3;
-
-    // --- INTERFACES ---
+    // --- INTERFACE ---
     public interface GameOverListener {
         void onScoreUpdate(int score);
         void onDiffUpdate(int diff);
@@ -68,28 +74,21 @@ public class GameView extends View {
         void onPhase2Start();
     }
 
-    public void setGameOverListener(GameOverListener listener) { this.listener = listener; }
-    public void setRecognitionManager(RecognitionManager manager) { this.recognitionManager = manager; }
-    public void setSoundManager(SoundManager soundManager) { this.soundManager = soundManager; }
-    public void pauseGame() { isPaused = true; }
-    public void resumeGame() { isPaused = false; }
-
     public GameView(Context context) {
         super(context);
         init();
     }
 
     private void init() {
-        textPaint.setColor(Color.BLACK);
+        // Cấu hình Paint
         textPaint.setTextSize(80);
         textPaint.setFakeBoldText(true);
 
-        drawPaint.setColor(Color.BLUE);
         drawPaint.setStrokeWidth(15);
         drawPaint.setStyle(Paint.Style.STROKE);
         drawPaint.setStrokeJoin(Paint.Join.ROUND);
+        drawPaint.setStrokeCap(Paint.Cap.ROUND);
 
-        hudPaintActive.setColor(Color.RED);
         hudPaintActive.setTextSize(50);
         hudPaintActive.setFakeBoldText(true);
 
@@ -99,8 +98,63 @@ public class GameView extends View {
 
         particlePaint.setStyle(Paint.Style.FILL);
 
-        gamePhase = 1;
+        // Giá trị mặc định an toàn
+        currentTheme = new GameTheme("Default", Color.WHITE, Color.BLACK, Color.BLUE, 0, R.raw.carefree, R.raw.azali_phase2, R.raw.pop, R.raw.pop2, R.raw.azali_phase2);
+        currentMode = GameMode.STORY;
+
         startGameLoop();
+    }
+
+    // --- SETTERS ---
+    public void setGameOverListener(GameOverListener listener) {
+        this.listener = listener;
+    }
+
+    public void setRecognitionManager(RecognitionManager manager) {
+        this.recognitionManager = manager;
+    }
+
+    public void setSoundManager(SoundManager soundManager) {
+        this.soundManager = soundManager;
+    }
+
+    public void pauseGame() {
+        isPaused = true;
+    }
+
+    public void resumeGame() {
+        isPaused = false;
+    }
+
+    public void setGameConfig(GameTheme theme, GameMode mode) {
+        this.currentTheme = theme;
+        this.currentMode = mode;
+
+        // Áp dụng màu sắc từ Theme
+        textPaint.setColor(theme.textColor);
+        drawPaint.setColor(theme.strokeColor);
+        hudPaintActive.setColor(theme.strokeColor);
+
+        // Áp dụng Font
+        if (theme.fontResId != 0) {
+            try {
+                Typeface tf = ResourcesCompat.getFont(getContext(), theme.fontResId);
+                textPaint.setTypeface(tf);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            textPaint.setTypeface(Typeface.DEFAULT_BOLD);
+        }
+
+        // Cấu hình độ khó theo Mode
+        if (currentMode == GameMode.ENDLESS) {
+            diff = 20;
+            gamePhase = 2; // Endless bắt đầu ở giai đoạn khó
+        } else {
+            diff = 0;
+            gamePhase = 1;
+        }
     }
 
     @Override
@@ -110,6 +164,7 @@ public class GameView extends View {
         screenHeight = h;
     }
 
+    // --- GAME LOOP ---
     private void startGameLoop() {
         final Handler handler = new Handler(Looper.getMainLooper());
         handler.post(new Runnable() {
@@ -117,15 +172,14 @@ public class GameView extends View {
             public void run() {
                 if (!isGameOver || isVictory) {
                     updateGame();
-                    invalidate();
-                    handler.postDelayed(this, 16);
+                    invalidate(); // Vẽ lại màn hình
+                    handler.postDelayed(this, 16); // ~60 FPS
                 }
             }
         });
     }
 
     private void updateGame() {
-        // Hiệu ứng nổ
         Iterator<Particle> pIter = particles.iterator();
         while (pIter.hasNext()) {
             Particle p = pIter.next();
@@ -133,73 +187,18 @@ public class GameView extends View {
             if (p.isDead()) pIter.remove();
         }
 
-        // Logic thắng cuộc
         if (isVictory) {
             return;
         }
 
-        // Logic game chính
-        if (gamePhase == 2) drawPaint.setColor(Color.RED);
         if (isPaused) return;
 
-        // Tính toán tốc độ spawn
-        long currentSpawnDelay = Math.max(500, BASE_SPAWN_DELAY - (diff * 30L));
-
+        long currentSpawnDelay = Math.max(500, BASE_SPAWN_DELAY - (diff * 25L));
         if (System.currentTimeMillis() - lastSpawnTime > currentSpawnDelay) {
             spawnEnemy();
             lastSpawnTime = System.currentTimeMillis();
         }
 
-        // Cập nhật vị trí rơi
-        updateFallingChars();
-    }
-
-    private void spawnEnemy() {
-        boolean isTargetAlreadyOnScreen = false;
-        for (FallingChar fc : fallingChars) {
-            if (fc.isTarget) {
-                isTargetAlreadyOnScreen = true;
-                break;
-            }
-        }
-
-        String charToSpawn;
-        boolean isTargetChar = false;
-        boolean shouldSpawnTarget = !isTargetAlreadyOnScreen
-                && random.nextInt(100) < TARGET_SPAWN_RATE
-                && collectedIndex < TARGET_FULL.length();
-
-        if (shouldSpawnTarget) {
-            char nextNeed = TARGET_FULL.charAt(collectedIndex);
-            boolean canSpawn = true;
-
-            // Chặn spawn nếu ở cuối Phase 1
-            if (collectedIndex >= 4 && gamePhase == 1) {
-                canSpawn = false;
-            }
-
-            if (canSpawn) {
-                charToSpawn = String.valueOf(nextNeed);
-                isTargetChar = true;
-            } else {
-                charToSpawn = String.valueOf(ENEMIES_CHARS.charAt(random.nextInt(ENEMIES_CHARS.length())));
-            }
-        } else {
-            charToSpawn = String.valueOf(ENEMIES_CHARS.charAt(random.nextInt(ENEMIES_CHARS.length())));
-        }
-
-        float baseSpeed = baseSpeedParam + (diff / 10.0f);
-        float finalSpeed = baseSpeed + random.nextInt(3);
-
-        // Tạo đối tượng FallingChar
-        fallingChars.add(new FallingChar(charToSpawn,
-                random.nextInt(screenWidth - 100) + 50,
-                0,
-                finalSpeed,
-                isTargetChar));
-    }
-
-    private void updateFallingChars() {
         Iterator<FallingChar> iter = fallingChars.iterator();
         while (iter.hasNext()) {
             FallingChar fc = iter.next();
@@ -217,36 +216,72 @@ public class GameView extends View {
         }
     }
 
+    private void spawnEnemy() {
+        boolean isTargetAlreadyOnScreen = false;
+        for (FallingChar fc : fallingChars) {
+            if (fc.isTarget) {
+                isTargetAlreadyOnScreen = true;
+                break;
+            }
+        }
+
+        String charToSpawn;
+        boolean isTargetChar = false;
+        boolean shouldSpawnTarget = !isTargetAlreadyOnScreen && random.nextInt(100) < TARGET_SPAWN_RATE;
+
+        if (shouldSpawnTarget) {
+            char nextNeed = TARGET_FULL.charAt(collectedIndex % TARGET_FULL.length());
+            boolean canSpawn = true;
+            if (currentMode == GameMode.STORY && collectedIndex >= 4 && gamePhase == 1) {
+                canSpawn = false;
+            }
+
+            if (canSpawn) {
+                charToSpawn = String.valueOf(nextNeed);
+                isTargetChar = true;
+            } else {
+                charToSpawn = String.valueOf(ENEMIES_CHARS.charAt(random.nextInt(ENEMIES_CHARS.length())));
+            }
+        } else {
+            charToSpawn = String.valueOf(ENEMIES_CHARS.charAt(random.nextInt(ENEMIES_CHARS.length())));
+        }
+
+        float baseSpeed = baseSpeedParam + (diff / 10.0f);
+        float finalSpeed = baseSpeed + random.nextInt(3);
+
+        fallingChars.add(new FallingChar(charToSpawn, random.nextInt(screenWidth - 100) + 50, 0, finalSpeed, isTargetChar));
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        // Vẽ HUD
-        float startX = 50;
-        float startY = screenHeight - 150;
-        float spacing = 60;
-
-        for (int i = 0; i < TARGET_FULL.length(); i++) {
-            String c = String.valueOf(TARGET_FULL.charAt(i));
-            if (i < collectedIndex) canvas.drawText(c, startX + (i * spacing), startY, hudPaintActive);
-            else canvas.drawText(c, startX + (i * spacing), startY, hudPaintInactive);
+        if (currentMode == GameMode.STORY) {
+            float startX = 50;
+            float startY = screenHeight - 150;
+            float spacing = 60;
+            for (int i = 0; i < TARGET_FULL.length(); i++) {
+                String c = String.valueOf(TARGET_FULL.charAt(i));
+                if (i < collectedIndex) {
+                    canvas.drawText(c, startX + (i * spacing), startY, hudPaintActive);
+                } else {
+                    canvas.drawText(c, startX + (i * spacing), startY, hudPaintInactive);
+                }
+            }
         }
 
-        // Vẽ chữ rơi
         for (FallingChar fc : fallingChars) {
-            if (fc.isTarget) textPaint.setColor(Color.RED);
-            else textPaint.setColor(Color.BLACK);
+            if (fc.isTarget) textPaint.setColor(currentTheme.strokeColor);
+            else textPaint.setColor(currentTheme.textColor);
             canvas.drawText(fc.character, fc.x, fc.y, textPaint);
         }
 
-        // Vẽ hiệu ứng nổ
         for (Particle p : particles) {
             particlePaint.setColor(p.color);
             particlePaint.setAlpha(p.alpha);
             canvas.drawCircle(p.x, p.y, p.size, particlePaint);
         }
 
-        textPaint.setColor(Color.BLACK);
         canvas.drawPath(currentPath, drawPaint);
     }
 
@@ -264,21 +299,35 @@ public class GameView extends View {
                 break;
             case MotionEvent.ACTION_MOVE:
                 currentPath.lineTo(x, y);
-                if (strokeBuilder != null) strokeBuilder.addPoint(Ink.Point.create(x, y, t));
+                if (strokeBuilder != null) {
+                    strokeBuilder.addPoint(Ink.Point.create(x, y, t));
+                }
                 break;
+
             case MotionEvent.ACTION_UP:
                 if (strokeBuilder != null) {
                     strokeBuilder.addPoint(Ink.Point.create(x, y, t));
                     inkBuilder.addStroke(strokeBuilder.build());
+
                     if (recognitionManager != null) {
-                        recognitionManager.recognize(inkBuilder.build(), result -> checkMatch(result));
+                        recognitionManager.recognize(inkBuilder.build(), new RecognitionManager.RecognitionListener() {
+                            @Override
+                            public void onResult(String result) {
+                                checkMatch(result);
+                            }
+                        });
                     }
+
                     inkBuilder = Ink.builder();
                     strokeBuilder = null;
                 }
-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    currentPath.reset();
-                    invalidate();
+
+                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        currentPath.reset();
+                        invalidate();
+                    }
                 }, 200);
                 break;
         }
@@ -293,17 +342,13 @@ public class GameView extends View {
         Iterator<FallingChar> iter = fallingChars.iterator();
         while (iter.hasNext()) {
             FallingChar fc = iter.next();
-
-            // Đối chiếu ký tự
             boolean isMatch = isMatchingChar(fc, textRaw, textUpper);
 
             if (isMatch) {
                 float hitX = fc.x;
                 float hitY = fc.y - 30;
+                iter.remove();
 
-                iter.remove(); // Xóa khỏi màn hình
-
-                // Tăng độ khó
                 diff++;
                 if (listener != null) listener.onDiffUpdate(diff);
 
@@ -318,7 +363,6 @@ public class GameView extends View {
         }
     }
 
-    // Hàm đối chiếu ký tự
     private boolean isMatchingChar(FallingChar fc, String textRaw, String textUpper) {
         if (fc.isTarget) {
             if (textRaw.equals("0")) return fc.character.equals("O");
@@ -338,12 +382,33 @@ public class GameView extends View {
         }
     }
 
-    private void handleTargetHit(float hitX, float hitY) {
+    private void handleTargetHit(float x, float y) {
         collectedIndex++;
-        if (soundManager != null) soundManager.playExplodeTarget();
-        spawnExplosion(hitX, hitY, Color.RED, 20, 8);
+        if (soundManager != null && collectedIndex < TARGET_FULL.length()) soundManager.playExplodeTarget();
+        spawnExplosion(x, y, currentTheme.strokeColor, 30, 15);
 
-        // Chuyển Phase
+        // --- LOGIC CHO ENDLESS MODE ---
+        if (currentMode == GameMode.ENDLESS) {
+            // Kiểm tra nếu đã hoàn thành trọn vẹn từ "helloworld"
+            if (collectedIndex >= TARGET_FULL.length()) {
+                // Reset lại index để người chơi viết lại từ đầu ('h')
+                collectedIndex = 0;
+
+                if (soundManager != null) {
+                    soundManager.playHeal();
+                }
+                // Cộng 1 điểm HP
+                score++;
+                if (listener != null) listener.onScoreUpdate(score);
+
+                // Thông báo nhỏ
+                Toast.makeText(getContext(), "+1 HP", Toast.LENGTH_SHORT).show();
+            }
+            return;
+        }
+
+        // --- LOGIC CHO DEFAULT MODE ---
+        // Logic chuyển Phase (khi xong chữ "hell")
         if ((gamePhase == 1 && collectedIndex == 4) || (gamePhase == 1 && diff == PHASE_SKIP_DIFF)) {
             gamePhase = 2;
             diff = PHASE_SKIP_DIFF;
@@ -351,8 +416,11 @@ public class GameView extends View {
             Toast.makeText(getContext(), "YOU WANT HELL?", Toast.LENGTH_SHORT).show();
         }
 
-        // Thắng Game
+        // Logic thắng game (khi xong "helloworld")
         if (collectedIndex >= TARGET_FULL.length()) {
+            if (soundManager != null) {
+                soundManager.playHeal();
+            }
             isGameOver = true;
             isVictory = true;
             if (listener != null) listener.onGameWin();
