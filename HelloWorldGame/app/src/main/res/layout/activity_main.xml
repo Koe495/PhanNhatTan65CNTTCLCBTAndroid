@@ -37,4 +37,10 @@
         android:textSize="20sp"
         android:visibility="gone"/>
 
+    <VideoView
+        android:id="@+id/videoBackground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:layout_gravity="center" />
 </FrameLayout>

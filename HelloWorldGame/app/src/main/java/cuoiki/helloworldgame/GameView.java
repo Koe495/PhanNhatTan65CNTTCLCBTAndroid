@@ -8,6 +8,7 @@ import android.graphics.Path;
 import android.graphics.Typeface;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
@@ -49,7 +50,11 @@ public class GameView extends View {
     private boolean isGameOver = false;
     private boolean isVictory = false;
     private boolean isPaused = false;
+    private boolean isJokerMode = false;
+
+    // Timer
     private long lastSpawnTime = 0;
+
     private float baseSpeedParam = 3;
     private int screenWidth, screenHeight;
 
@@ -64,6 +69,8 @@ public class GameView extends View {
     private RecognitionManager recognitionManager;
     private SoundManager soundManager;
     private GameOverListener listener;
+    private GestureDetector gestureDetector;
+    private JokerGameLogic jokerLogic;
 
     // --- INTERFACE ---
     public interface GameOverListener {
@@ -72,6 +79,7 @@ public class GameView extends View {
         void onGameOver();
         void onGameWin();
         void onPhase2Start();
+        void onPauseRequest();
     }
 
     public GameView(Context context) {
@@ -98,59 +106,60 @@ public class GameView extends View {
 
         particlePaint.setStyle(Paint.Style.FILL);
 
-        // Giá trị mặc định an toàn
+        // Giá trị mặc định
         currentTheme = new GameTheme("Default", Color.WHITE, Color.BLACK, Color.BLUE, 0, R.raw.carefree, R.raw.azali_phase2, R.raw.pop, R.raw.pop2, R.raw.azali_phase2);
         currentMode = GameMode.STORY;
 
         startGameLoop();
+
+        gestureDetector = new GestureDetector(getContext(), new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public boolean onDoubleTap(MotionEvent e) {
+                if (!isGameOver && !isVictory) {
+                    isPaused = true; // Dừng game loop
+                    if (listener != null) {
+                        listener.onPauseRequest(); // Hiện menu pause
+                    }
+                }
+                return true;
+            }
+        });
     }
 
     // --- SETTERS ---
-    public void setGameOverListener(GameOverListener listener) {
-        this.listener = listener;
-    }
-
-    public void setRecognitionManager(RecognitionManager manager) {
-        this.recognitionManager = manager;
-    }
-
-    public void setSoundManager(SoundManager soundManager) {
-        this.soundManager = soundManager;
-    }
-
-    public void pauseGame() {
-        isPaused = true;
-    }
-
-    public void resumeGame() {
-        isPaused = false;
-    }
+    public void setGameOverListener(GameOverListener listener) { this.listener = listener; }
+    public void setRecognitionManager(RecognitionManager manager) { this.recognitionManager = manager; }
+    public void setSoundManager(SoundManager soundManager) { this.soundManager = soundManager; }
+    public void pauseGame() { isPaused = true; }
+    public void resumeGame() { isPaused = false; }
 
     public void setGameConfig(GameTheme theme, GameMode mode) {
         this.currentTheme = theme;
         this.currentMode = mode;
 
-        // Áp dụng màu sắc từ Theme
+        isJokerMode = theme.name.equals("Joker");
+        if (isJokerMode) {
+            jokerLogic = new JokerGameLogic(getContext());
+        } else {
+            jokerLogic = null;
+        }
+
         textPaint.setColor(theme.textColor);
         drawPaint.setColor(theme.strokeColor);
         hudPaintActive.setColor(theme.strokeColor);
 
-        // Áp dụng Font
         if (theme.fontResId != 0) {
             try {
                 Typeface tf = ResourcesCompat.getFont(getContext(), theme.fontResId);
                 textPaint.setTypeface(tf);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            } catch (Exception e) { e.printStackTrace(); }
         } else {
             textPaint.setTypeface(Typeface.DEFAULT_BOLD);
         }
 
-        // Cấu hình độ khó theo Mode
         if (currentMode == GameMode.ENDLESS) {
             diff = 20;
-            gamePhase = 2; // Endless bắt đầu ở giai đoạn khó
+            gamePhase = 2;
         } else {
             diff = 0;
             gamePhase = 1;
@@ -164,7 +173,6 @@ public class GameView extends View {
         screenHeight = h;
     }
 
-    // --- GAME LOOP ---
     private void startGameLoop() {
         final Handler handler = new Handler(Looper.getMainLooper());
         handler.post(new Runnable() {
@@ -172,14 +180,15 @@ public class GameView extends View {
             public void run() {
                 if (!isGameOver || isVictory) {
                     updateGame();
-                    invalidate(); // Vẽ lại màn hình
-                    handler.postDelayed(this, 16); // ~60 FPS
+                    invalidate();
+                    handler.postDelayed(this, 16);
                 }
             }
         });
     }
 
     private void updateGame() {
+        // Hiệu ứng nổ
         Iterator<Particle> pIter = particles.iterator();
         while (pIter.hasNext()) {
             Particle p = pIter.next();
@@ -187,30 +196,53 @@ public class GameView extends View {
             if (p.isDead()) pIter.remove();
         }
 
-        if (isVictory) {
-            return;
-        }
+        if (isVictory || isPaused) return;
 
-        if (isPaused) return;
+        // --- PHÂN TÁCH LOGIC RÕ RÀNG ---
+        if (isJokerMode) {
+            // --- LOGIC JOKER ---
+            // Nhận về số lượng sát thương
+            int damage = jokerLogic.update(screenHeight);
 
-        long currentSpawnDelay = Math.max(500, BASE_SPAWN_DELAY - (diff * 25L));
-        if (System.currentTimeMillis() - lastSpawnTime > currentSpawnDelay) {
-            spawnEnemy();
-            lastSpawnTime = System.currentTimeMillis();
-        }
-
-        Iterator<FallingChar> iter = fallingChars.iterator();
-        while (iter.hasNext()) {
-            FallingChar fc = iter.next();
-            fc.update();
-
-            if (fc.y > screenHeight) {
-                iter.remove();
-                score--;
+            if (damage > 0) {
+                score -= damage;
                 if (listener != null) listener.onScoreUpdate(score);
+
                 if (score <= 0) {
                     isGameOver = true;
                     if (listener != null) listener.onGameOver();
+                }
+            }
+            // Spawn logic joker theme
+            if (System.currentTimeMillis() - lastSpawnTime > 2000) {
+                jokerLogic.trySpawnEnemy(screenWidth);
+                lastSpawnTime = System.currentTimeMillis();
+            }
+        }
+        else {
+            // LOGIC NORMAL (Classic / Undertale)
+
+            // Spawn Quái
+            long currentSpawnDelay = Math.max(500, BASE_SPAWN_DELAY - (diff * 25L));
+            if (System.currentTimeMillis() - lastSpawnTime > currentSpawnDelay) {
+                spawnEnemy();
+                lastSpawnTime = System.currentTimeMillis();
+            }
+
+            // Cập nhật vị trí Quái
+            Iterator<FallingChar> iter = fallingChars.iterator();
+            while (iter.hasNext()) {
+                FallingChar fc = iter.next();
+                fc.update();
+
+                if (fc.y > screenHeight) {
+                    iter.remove();
+                    score--;
+                    if (listener != null) listener.onScoreUpdate(score);
+                    if (score <= 0) {
+                        isGameOver = true;
+                        if (listener != null) listener.onGameOver();
+                    }
                 }
             }
         }
@@ -256,24 +288,29 @@ public class GameView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        if (currentMode == GameMode.STORY) {
-            float startX = 50;
-            float startY = screenHeight - 150;
-            float spacing = 60;
-            for (int i = 0; i < TARGET_FULL.length(); i++) {
-                String c = String.valueOf(TARGET_FULL.charAt(i));
-                if (i < collectedIndex) {
-                    canvas.drawText(c, startX + (i * spacing), startY, hudPaintActive);
-                } else {
-                    canvas.drawText(c, startX + (i * spacing), startY, hudPaintInactive);
+        if (isJokerMode) {
+            // Vẽ giao diện Joker
+            jokerLogic.draw(canvas, screenWidth, screenHeight);
+        } else {
+            // Vẽ giao diện Normal
+            if (currentMode == GameMode.STORY) {
+                float startX = 50;
+                float startY = screenHeight - 150;
+                float spacing = 60;
+                for (int i = 0; i < TARGET_FULL.length(); i++) {
+                    String c = String.valueOf(TARGET_FULL.charAt(i));
+                    if (i < collectedIndex) {
+                        canvas.drawText(c, startX + (i * spacing), startY, hudPaintActive);
+                    } else {
+                        canvas.drawText(c, startX + (i * spacing), startY, hudPaintInactive);
+                    }
                 }
             }
-        }
-
-        for (FallingChar fc : fallingChars) {
-            if (fc.isTarget) textPaint.setColor(currentTheme.strokeColor);
-            else textPaint.setColor(currentTheme.textColor);
-            canvas.drawText(fc.character, fc.x, fc.y, textPaint);
+            for (FallingChar fc : fallingChars) {
+                if (fc.isTarget) textPaint.setColor(currentTheme.strokeColor);
+                else textPaint.setColor(currentTheme.textColor);
+                canvas.drawText(fc.character, fc.x, fc.y, textPaint);
+            }
         }
 
         for (Particle p : particles) {
@@ -287,6 +324,18 @@ public class GameView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        // Đang pause thì k cho vẽ
+        if (isPaused || isGameOver || isVictory) return true;
+
+        if (gestureDetector.onTouchEvent(event)) {
+            // Đã double tap r thì xoá nét vẽ k cho vẽ thừa
+            inkBuilder = Ink.builder();
+            strokeBuilder = null;
+            currentPath.reset();
+            invalidate();
+            return true;
+        }
+
         float x = event.getX();
         float y = event.getY();
         long t = event.getEventTime();
@@ -339,30 +388,59 @@ public class GameView extends View {
         String textRaw = recognizedText;
         String textUpper = recognizedText.toUpperCase();
 
-        Iterator<FallingChar> iter = fallingChars.iterator();
-        while (iter.hasNext()) {
-            FallingChar fc = iter.next();
-            boolean isMatch = isMatchingChar(fc, textRaw, textUpper);
+        if (isJokerMode) {
+            boolean hit = jokerLogic.checkMatch(recognizedText);
+            if (hit) {
+                if (soundManager != null) soundManager.playExplodeNormal();
 
-            if (isMatch) {
-                float hitX = fc.x;
-                float hitY = fc.y - 30;
-                iter.remove();
+            }
+        } else {
+            Iterator<FallingChar> iter = fallingChars.iterator();
+            while (iter.hasNext()) {
+                FallingChar fc = iter.next();
+                boolean isMatch = isMatchingChar(fc, textRaw, textUpper);
 
-                diff++;
-                if (listener != null) listener.onDiffUpdate(diff);
+                if (isMatch) {
+                    float hitX = fc.x;
+                    float hitY = fc.y - 30;
+                    iter.remove();
 
-                if (fc.isTarget) {
-                    handleTargetHit(hitX, hitY);
-                } else {
-                    if (soundManager != null) soundManager.playExplodeNormal();
-                    spawnExplosion(hitX, hitY, Color.DKGRAY, 10, 5);
+                    diff++;
+                    if (listener != null) listener.onDiffUpdate(diff);
+
+                    if (fc.isTarget) {
+                        handleTargetHit(hitX, hitY);
+                    } else {
+                        if (soundManager != null) soundManager.playExplodeNormal();
+                        spawnExplosion(hitX, hitY, Color.DKGRAY, 10, 5);
+                    }
+                    break;
                 }
-                break;
             }
         }
     }
+    public void restartGame() {
+        score = 10;
+        diff = 0;
+        collectedIndex = 0;
+        gamePhase = 1;
+        isGameOver = false;
+        isVictory = false;
+        isPaused = false;
 
+        fallingChars.clear();
+        particles.clear();
+        currentPath.reset();
+
+        if (isJokerMode && jokerLogic != null) {
+            jokerLogic = new JokerGameLogic(getContext());
+        }
+
+        if (listener != null) listener.onScoreUpdate(score);
+        invalidate();
+
+        lastSpawnTime = System.currentTimeMillis();
+    }
     private boolean isMatchingChar(FallingChar fc, String textRaw, String textUpper) {
         if (fc.isTarget) {
             if (textRaw.equals("0")) return fc.character.equals("O");
@@ -387,28 +465,17 @@ public class GameView extends View {
         if (soundManager != null && collectedIndex < TARGET_FULL.length()) soundManager.playExplodeTarget();
         spawnExplosion(x, y, currentTheme.strokeColor, 30, 15);
 
-        // --- LOGIC CHO ENDLESS MODE ---
         if (currentMode == GameMode.ENDLESS) {
-            // Kiểm tra nếu đã hoàn thành trọn vẹn từ "helloworld"
             if (collectedIndex >= TARGET_FULL.length()) {
-                // Reset lại index để người chơi viết lại từ đầu ('h')
                 collectedIndex = 0;
-
-                if (soundManager != null) {
-                    soundManager.playHeal();
-                }
-                // Cộng 1 điểm HP
+                if (soundManager != null) soundManager.playHeal();
                 score++;
                 if (listener != null) listener.onScoreUpdate(score);
-
-                // Thông báo nhỏ
                 Toast.makeText(getContext(), "+1 HP", Toast.LENGTH_SHORT).show();
             }
             return;
         }
 
-        // --- LOGIC CHO DEFAULT MODE ---
-        // Logic chuyển Phase (khi xong chữ "hell")
         if ((gamePhase == 1 && collectedIndex == 4) || (gamePhase == 1 && diff == PHASE_SKIP_DIFF)) {
             gamePhase = 2;
             diff = PHASE_SKIP_DIFF;
@@ -416,11 +483,8 @@ public class GameView extends View {
             Toast.makeText(getContext(), "YOU WANT HELL?", Toast.LENGTH_SHORT).show();
         }
 
-        // Logic thắng game (khi xong "helloworld")
         if (collectedIndex >= TARGET_FULL.length()) {
-            if (soundManager != null) {
-                soundManager.playHeal();
-            }
+            if (soundManager != null) soundManager.playHeal();
             isGameOver = true;
             isVictory = true;
             if (listener != null) listener.onGameWin();

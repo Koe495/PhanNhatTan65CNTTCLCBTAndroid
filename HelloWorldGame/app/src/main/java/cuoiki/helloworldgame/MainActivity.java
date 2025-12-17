@@ -2,6 +2,7 @@ package cuoiki.helloworldgame;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.media.MediaPlayer;
@@ -16,6 +17,7 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.res.ResourcesCompat;
 
@@ -56,38 +58,28 @@ public class MainActivity extends AppCompatActivity {
         tvDiff = findViewById(R.id.tvDiff);
 
         // Khởi tạo tài nguyên
-        initThemes();
         soundManager = new SoundManager(this);
         recognitionManager = new RecognitionManager();
         recognitionManager.downloadModel();
 
+        initThemes();
+
         // Cài đặt tương tác vuốt
         tvHelloWorld.setOnTouchListener(new OnSwipeTouchListener(this) {
             @Override
-            public void onSwipeLeft() {
-                changeTheme(1);
-            }
-
+            public void onSwipeLeft() { changeTheme(1); }
             @Override
-            public void onSwipeRight() {
-                changeTheme(-1);
-            }
-
+            public void onSwipeRight() { changeTheme(-1); }
             @Override
-            public void onSwipeUp() {
-                toggleGameMode();
-            }
-
+            public void onSwipeUp() { toggleGameMode(); }
             @Override
-            public void onSwipeDown() {
-                toggleGameMode();
-            }
-
+            public void onSwipeDown() { toggleGameMode(); }
             @Override
             public void onClick() {
                 soundManager.playClick();
                 startOpeningAnimation();
             }
+
         });
 
         applyThemeToMenu();
@@ -97,11 +89,9 @@ public class MainActivity extends AppCompatActivity {
         // Theme 1: Classic
         themes.add(new GameTheme("Classic",
                 Color.WHITE, Color.BLACK, Color.RED,
-                0, // Default font
-                R.raw.carefree,
-                R.raw.azali_phase2,
-                R.raw.pop,
-                R.raw.pop2,
+                0,
+                R.raw.carefree, R.raw.azali_phase2,
+                R.raw.pop, R.raw.pop2,
                 R.raw.azali_phase2
         ));
 
@@ -109,11 +99,18 @@ public class MainActivity extends AppCompatActivity {
         themes.add(new GameTheme("Undertale",
                 Color.BLACK, Color.WHITE, Color.BLUE,
                 R.font.undertale_sans,
-                R.raw.undertale_phase1,
-                R.raw.undertale_phase2,
-                R.raw.pop,
-                R.raw.pop2_undertale,
+                R.raw.undertale_phase1, R.raw.undertale_phase2,
+                R.raw.pop, R.raw.pop2_undertale,
                 R.raw.undertale_endless
+        ));
+
+        // Theme 3: Joker (Vẫn giữ logic màu và nhạc, nhưng bỏ video background)
+        themes.add(new GameTheme("Joker",
+                Color.BLACK, Color.WHITE, Color.RED,
+                0,
+                R.raw.joker_menu_music, R.raw.joker_menu_music,
+                R.raw.pop, R.raw.pop2,
+                R.raw.joker_menu_music
         ));
     }
 
@@ -123,47 +120,50 @@ public class MainActivity extends AppCompatActivity {
         if (currentThemeIndex < 0) currentThemeIndex = themes.size() - 1;
 
         soundManager.playThemeChange();
-
         applyThemeToMenu();
         Toast.makeText(this, "Theme: " + themes.get(currentThemeIndex).name, Toast.LENGTH_SHORT).show();
     }
 
     private void toggleGameMode() {
-        if (currentGameMode == GameMode.STORY) {
-            currentGameMode = GameMode.ENDLESS;
-        } else {
-            currentGameMode = GameMode.STORY;
-        }
+        if (currentGameMode == GameMode.STORY) currentGameMode = GameMode.ENDLESS;
+        else currentGameMode = GameMode.STORY;
 
         soundManager.playGameModeChange();
-
         applyThemeToMenu();
 
         String modeText = (currentGameMode == GameMode.ENDLESS) ? "ENDLESS MODE (Survival)" : "STORY MODE";
         Toast.makeText(this, modeText, Toast.LENGTH_SHORT).show();
+
+        // [ĐÃ BỎ] Hiệu ứng flipCard
     }
 
     private void applyThemeToMenu() {
         GameTheme theme = themes.get(currentThemeIndex);
 
         soundManager.loadThemeSounds(theme);
+
+        // 1. Áp dụng Màu nền đơn giản (Không Video)
         rootContainer.setBackgroundColor(theme.bgColor);
 
-        // Áp dụng Font
+        // 2. Reset lại Text (để xóa background lá bài nếu có từ code cũ)
+        tvHelloWorld.setBackground(null);
+        tvHelloWorld.setText("HELLO WORLD");
+
+        // 3. Áp dụng Font
         Typeface tf = Typeface.DEFAULT_BOLD;
         if (theme.fontResId != 0) {
             try {
                 tf = ResourcesCompat.getFont(this, theme.fontResId);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            } catch (Exception e) { e.printStackTrace(); }
         }
         tvHelloWorld.setTypeface(tf);
 
-        // Áp dụng màu chữ theo Mode
+        // 4. Áp dụng màu chữ
         if (currentGameMode == GameMode.ENDLESS) {
             tvHelloWorld.setTextColor(Color.RED);
         } else {
+            // Joker Theme: Màu chữ trắng (trên nền đen)
+            // Classic Theme: Màu chữ đen (trên nền trắng)
             tvHelloWorld.setTextColor(theme.textColor);
         }
     }
@@ -174,7 +174,6 @@ public class MainActivity extends AppCompatActivity {
         Typeface originTypeface = tvHelloWorld.getTypeface();
         float spaceWidth = tvHelloWorld.getPaint().measureText(" ");
 
-        // Ẩn chữ gốc để thay thế bằng các chữ cái rời
         tvHelloWorld.setVisibility(View.INVISIBLE);
 
         String text = tvHelloWorld.getText().toString();
@@ -210,13 +209,12 @@ public class MainActivity extends AppCompatActivity {
             params.gravity = Gravity.TOP | Gravity.START;
 
             rootContainer.addView(charView, params);
-
             charView.measure(0, 0);
             currentX += charView.getMeasuredWidth();
 
-            float bounceOffsetY = -50f;
+            // Hiệu ứng nảy mặc định
             ViewPropertyAnimator animator = charView.animate()
-                    .translationY(bounceOffsetY)
+                    .translationY(-50f)
                     .setDuration(150)
                     .setListener(null);
 
@@ -259,7 +257,6 @@ public class MainActivity extends AppCompatActivity {
 
         gameContainer.addView(gameView);
 
-        // Logic chọn nhạc
         if (currentGameMode == GameMode.ENDLESS) {
             playMusic(selectedTheme.musicEndlessId);
             isPhase2MusicPlaying = true;
@@ -271,24 +268,12 @@ public class MainActivity extends AppCompatActivity {
         gameView.setGameOverListener(new GameView.GameOverListener() {
             @Override
             public void onScoreUpdate(final int score) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        tvScore.setText("HP: " + score);
-                    }
-                });
+                runOnUiThread(new Runnable() { @Override public void run() { tvScore.setText("HP: " + score); } });
             }
-
             @Override
             public void onDiffUpdate(final int diff) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        tvDiff.setText("Diff: " + diff);
-                    }
-                });
+                runOnUiThread(new Runnable() { @Override public void run() { tvDiff.setText("Diff: " + diff); } });
             }
-
             @Override
             public void onGameOver() {
                 runOnUiThread(new Runnable() {
@@ -302,7 +287,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
             }
-
             @Override
             public void onGameWin() {
                 runOnUiThread(new Runnable() {
@@ -315,55 +299,87 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
             }
-
             @Override
             public void onPhase2Start() {
                 runOnUiThread(new Runnable() {
                     @Override
+                    public void run() { startPhase2Effect(selectedTheme.musicPhase2ResId); }
+                });
+            }
+            @Override
+            public void onPauseRequest() {
+                runOnUiThread(new Runnable() {
+                    @Override
                     public void run() {
-                        startPhase2Effect(selectedTheme.musicPhase2ResId);
+                        showPauseMenu();
                     }
                 });
             }
         });
     }
+    private void showPauseMenu() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("GAME PAUSED");
+        builder.setCancelable(false);
 
+        // Continue
+        builder.setPositiveButton("CONTINUE", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                gameView.resumeGame();
+                dialog.dismiss();
+            }
+        });
+
+        // Restart
+        builder.setNeutralButton("RESTART", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                gameView.restartGame();
+                dialog.dismiss();
+            }
+        });
+
+        // Main Menu
+        builder.setNegativeButton("MAIN MENU", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                finish();
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
     private void startPhase2Effect(int musicId) {
         gameView.pauseGame();
         stopMusic();
         playMusic(musicId);
-        isPhase2MusicPlaying = true;
-
         final Random random = new Random();
         final Handler handler = new Handler();
-        final long effectDuration = 3000;
-        final long interval = 60;
-        final long startTime = System.currentTimeMillis();
 
         handler.post(new Runnable() {
+            long startTime = System.currentTimeMillis();
             @Override
             public void run() {
-                if (System.currentTimeMillis() - startTime >= effectDuration) {
+                if (System.currentTimeMillis() - startTime >= 3000) {
                     gameView.resumeGame();
                     return;
                 }
                 spawnRisingRedChar(random);
-                handler.postDelayed(this, interval);
+                handler.postDelayed(this, 60);
             }
         });
     }
 
     private void spawnRisingRedChar(Random random) {
-        // Debug:
-        android.util.Log.d("Effect", "Đang tạo chữ bay");
-
         final TextView charView = new TextView(this);
         String chars = "!@#$%^&HELLhellHELL";
         charView.setText(String.valueOf(chars.charAt(random.nextInt(chars.length()))));
-
         charView.setTextSize(20);
         charView.setTypeface(null, Typeface.BOLD);
 
+        // Dùng màu stroke của theme để chữ nảy lên cùng tông với theme
         charView.setTextColor(themes.get(currentThemeIndex).strokeColor);
 
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
@@ -371,21 +387,16 @@ public class MainActivity extends AppCompatActivity {
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
         params.gravity = Gravity.BOTTOM | Gravity.START;
-
-        // Random vị trí ngang
         if (rootContainer.getWidth() > 0) {
             params.leftMargin = random.nextInt(rootContainer.getWidth() - 100);
         }
 
         rootContainer.addView(charView, params);
-
         charView.bringToFront();
-
         charView.setElevation(1000f);
 
-        // Hiệu ứng bay lên
         charView.animate()
-                .translationY(-rootContainer.getHeight()) // Bay từ đáy lên đỉnh
+                .translationY(-rootContainer.getHeight())
                 .rotation(random.nextInt(360))
                 .setDuration(500 + random.nextInt(500))
                 .withEndAction(new Runnable() {
@@ -408,9 +419,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void stopMusic() {
         if (mediaPlayer != null) {
-            if (mediaPlayer.isPlaying()) {
-                mediaPlayer.stop();
-            }
+            if (mediaPlayer.isPlaying()) mediaPlayer.stop();
             mediaPlayer.release();
             mediaPlayer = null;
         }
@@ -419,28 +428,21 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
-            mediaPlayer.pause();
-        }
+        if (mediaPlayer != null && mediaPlayer.isPlaying()) mediaPlayer.pause();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
-            mediaPlayer.start();
-        }
+        if (mediaPlayer != null && !mediaPlayer.isPlaying()) mediaPlayer.start();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         stopMusic();
-        if (soundManager != null) {
-            soundManager.release();
-        }
-        if (recognitionManager != null) {
-            recognitionManager.close();
-        }
+        if (soundManager != null) soundManager.release();
+        if (recognitionManager != null) recognitionManager.close();
     }
+
 }
