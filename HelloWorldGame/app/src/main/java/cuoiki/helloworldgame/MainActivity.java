@@ -344,7 +344,13 @@ public class MainActivity extends AppCompatActivity {
         builder.setNegativeButton("MAIN MENU", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                if (gameView != null) {
+                    gameView.pauseGame();
+                }
                 finish();
+                startActivity(getIntent());
+//                //Loại bỏ hiệu ứng chuyển cảnh để cảm giác reset tức thì
+//                overridePendingTransition(0, 0);
             }
         });
 

@@ -496,4 +496,12 @@ public class GameView extends View {
             particles.add(new Particle(x, y, color, sizeBase + random.nextInt(10)));
         }
     }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        // Khi View bị gỡ khỏi màn hình do Activity reset, bắt buộc dừng game
+        isGameOver = true;
+        isPaused = true;
+    }
 }
