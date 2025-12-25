@@ -17,6 +17,7 @@ public class SoundManager {
     private int soundThemeChangeId;
     private int soundGameModeChangeId;
     private int soundHealId;
+    private int soundQTEAppearId;
 
     public SoundManager(Context context) {
         this.context = context;
@@ -26,6 +27,9 @@ public class SoundManager {
         soundThemeChangeId = soundPool.load(context, R.raw.select, 1);
         soundGameModeChangeId = soundPool.load(context, R.raw.select, 1);
         soundHealId = soundPool.load(context, R.raw.heal, 1);
+
+        // Cập nhật: Tải âm thanh cho QTE (Blaster Appear)
+        soundQTEAppearId = soundPool.load(context, R.raw.undertale_create_qte, 1);
     }
 
     private void initSoundPool() {
@@ -119,11 +123,11 @@ public class SoundManager {
         }
     }
 
-    // --- BLASTER SOUNDS ---
+    // --- BLASTER / QTE SOUNDS ---
     public void playBlasterAppear() {
-        // Tái sử dụng âm thanh select nhưng pitch cao hơn (1.5x) để tạo tiếng "Vút"
-        if (soundThemeChangeId != 0) {
-            soundPool.play(soundThemeChangeId, 0.8f, 0.8f, 1, 0, 1.5f);
+        // Cập nhật: Phát âm thanh QTE chính xác
+        if (soundQTEAppearId != 0) {
+            soundPool.play(soundQTEAppearId, 0.8f, 0.8f, 1, 0, 1f);
         }
     }
 
