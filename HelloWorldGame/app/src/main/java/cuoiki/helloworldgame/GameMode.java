@@ -1,6 +1,6 @@
 package cuoiki.helloworldgame;
 
 public enum GameMode {
-    STORY,   // Chế độ cốt truyện
+    CLASSIC,   // Chế độ thường
     ENDLESS  // Chế độ vô hạn
 }

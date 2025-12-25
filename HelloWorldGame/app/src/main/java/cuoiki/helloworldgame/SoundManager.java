@@ -2,11 +2,15 @@ package cuoiki.helloworldgame;
 
 import android.content.Context;
 import android.media.AudioAttributes;
+import android.media.MediaPlayer;
 import android.media.SoundPool;
 
 public class SoundManager {
     private SoundPool soundPool;
+    private MediaPlayer backgroundPlayer; // Dùng để phát nhạc nền
     private Context context;
+
+    // SFX IDs
     private int soundClickId;
     private int soundExplodeNormalId;
     private int soundExplodeTargetId;
@@ -44,6 +48,42 @@ public class SoundManager {
         soundExplodeTargetId = soundPool.load(context, theme.sfxTargetId, 1);
     }
 
+    // --- BACKGROUND MUSIC CONTROL ---
+
+    public void playBackground(int resId) {
+        stopBackground(); // Dừng bài cũ nếu có
+        backgroundPlayer = MediaPlayer.create(context, resId);
+        if (backgroundPlayer != null) {
+            backgroundPlayer.setLooping(true); // Nhạc nền luôn lặp lại
+            backgroundPlayer.start();
+        }
+    }
+
+    public void pauseBackground() {
+        if (backgroundPlayer != null && backgroundPlayer.isPlaying()) {
+            backgroundPlayer.pause();
+        }
+    }
+
+    public void resumeBackground() {
+        if (backgroundPlayer != null && !backgroundPlayer.isPlaying()) {
+            // Chỉ resume nếu player còn tồn tại (chưa bị release)
+            backgroundPlayer.start();
+        }
+    }
+
+    public void stopBackground() {
+        if (backgroundPlayer != null) {
+            if (backgroundPlayer.isPlaying()) {
+                backgroundPlayer.stop();
+            }
+            backgroundPlayer.release();
+            backgroundPlayer = null;
+        }
+    }
+
+    // --- SFX METHODS ---
+
     public void playClick() {
         if (soundClickId != 0) {
             soundPool.play(soundClickId, 1f, 1f, 0, 0, 1f);
@@ -79,10 +119,26 @@ public class SoundManager {
         }
     }
 
+    // --- BLASTER SOUNDS ---
+    public void playBlasterAppear() {
+        // Tái sử dụng âm thanh select nhưng pitch cao hơn (1.5x) để tạo tiếng "Vút"
+        if (soundThemeChangeId != 0) {
+            soundPool.play(soundThemeChangeId, 0.8f, 0.8f, 1, 0, 1.5f);
+        }
+    }
+
+    public void playBlasterFire() {
+        // Tái sử dụng âm thanh nổ target (pop2) nhưng pitch thấp (0.5x) để tạo tiếng bass dày "Bùm"
+        if (soundExplodeTargetId != 0) {
+            soundPool.play(soundExplodeTargetId, 1f, 1f, 2, 0, 0.5f);
+        }
+    }
+
     public void release() {
         if (soundPool != null) {
             soundPool.release();
             soundPool = null;
         }
+        stopBackground(); // Giải phóng MediaPlayer
     }
 }

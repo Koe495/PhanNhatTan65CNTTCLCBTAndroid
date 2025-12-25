@@ -21,12 +21,12 @@ public class JokerDeckManager {
     private void initDeck() {
         deck.clear();
 
-        // 1. Load tấm ảnh lớn từ Resources
+        // Load tấm ảnh lớn từ Resources
         Bitmap atlas = BitmapFactory.decodeResource(context.getResources(), R.drawable.cards_atlas);
 
         if (atlas == null) return;
 
-        // 2. Tính kích thước một lá bài
+        // Tính kích thước một lá bài
         int cols = 13; // 13 lá mỗi dòng
         int rows = 4;  // 4 chất
         int cardWidth = atlas.getWidth() / cols;
@@ -34,10 +34,9 @@ public class JokerDeckManager {
 
         String[] ranks = {"a", "2", "3", "4", "5", "6", "7", "8", "9", "10", "j", "q", "k"};
 
-        // Thứ tự dòng trong ảnh của bạn: 0:Heart, 1:Spade, 2:Clover, 3:Tile
-        Card.Suit[] suits = {Card.Suit.HEART, Card.Suit.SPADE, Card.Suit.CLOVER, Card.Suit.TILE};
+        Card.Suit[] suits = {Card.Suit.HEART, Card.Suit.SPADE, Card.Suit.CLUB, Card.Suit.DIAMOND};
 
-        // 3. Vòng lặp cắt ảnh
+        // Vòng lặp cắt ảnh
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
                 // Cắt ảnh con từ ảnh lớn

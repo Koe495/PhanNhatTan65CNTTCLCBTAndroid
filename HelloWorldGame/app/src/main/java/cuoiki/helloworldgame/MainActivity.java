@@ -5,7 +5,6 @@ import android.animation.AnimatorListenerAdapter;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.TypedValue;
@@ -38,12 +37,12 @@ public class MainActivity extends AppCompatActivity {
     private GameView gameView;
     private RecognitionManager recognitionManager;
     private SoundManager soundManager;
-    private MediaPlayer mediaPlayer;
+    // Đã xóa MediaPlayer riêng lẻ, sử dụng SoundManager thay thế
 
     // --- State Management ---
     private List<GameTheme> themes = new ArrayList<>();
     private int currentThemeIndex = 0;
-    private GameMode currentGameMode = GameMode.STORY;
+    private GameMode currentGameMode = GameMode.CLASSIC;
     private boolean isPhase2MusicPlaying = false;
 
     @Override
@@ -104,9 +103,9 @@ public class MainActivity extends AppCompatActivity {
                 R.raw.undertale_endless
         ));
 
-        // Theme 3: Joker (Vẫn giữ logic màu và nhạc, nhưng bỏ video background)
+        // Theme 3: Joker
         themes.add(new GameTheme("Joker",
-                Color.BLACK, Color.WHITE, Color.RED,
+                Color.WHITE, Color.BLACK, Color.RED,
                 0,
                 R.raw.joker_menu_music, R.raw.joker_menu_music,
                 R.raw.pop, R.raw.pop2,
@@ -125,8 +124,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void toggleGameMode() {
-        if (currentGameMode == GameMode.STORY) currentGameMode = GameMode.ENDLESS;
-        else currentGameMode = GameMode.STORY;
+        if (currentGameMode == GameMode.CLASSIC) currentGameMode = GameMode.ENDLESS;
+        else currentGameMode = GameMode.CLASSIC;
 
         soundManager.playGameModeChange();
         applyThemeToMenu();
@@ -134,7 +133,6 @@ public class MainActivity extends AppCompatActivity {
         String modeText = (currentGameMode == GameMode.ENDLESS) ? "ENDLESS MODE (Survival)" : "STORY MODE";
         Toast.makeText(this, modeText, Toast.LENGTH_SHORT).show();
 
-        // [ĐÃ BỎ] Hiệu ứng flipCard
     }
 
     private void applyThemeToMenu() {
@@ -142,14 +140,13 @@ public class MainActivity extends AppCompatActivity {
 
         soundManager.loadThemeSounds(theme);
 
-        // 1. Áp dụng Màu nền đơn giản (Không Video)
         rootContainer.setBackgroundColor(theme.bgColor);
 
-        // 2. Reset lại Text (để xóa background lá bài nếu có từ code cũ)
+        // Reset lại text
         tvHelloWorld.setBackground(null);
         tvHelloWorld.setText("HELLO WORLD");
 
-        // 3. Áp dụng Font
+        // Áp dụng Font
         Typeface tf = Typeface.DEFAULT_BOLD;
         if (theme.fontResId != 0) {
             try {
@@ -158,12 +155,10 @@ public class MainActivity extends AppCompatActivity {
         }
         tvHelloWorld.setTypeface(tf);
 
-        // 4. Áp dụng màu chữ
+        // Áp dụng màu chữ
         if (currentGameMode == GameMode.ENDLESS) {
             tvHelloWorld.setTextColor(Color.RED);
         } else {
-            // Joker Theme: Màu chữ trắng (trên nền đen)
-            // Classic Theme: Màu chữ đen (trên nền trắng)
             tvHelloWorld.setTextColor(theme.textColor);
         }
     }
@@ -257,11 +252,12 @@ public class MainActivity extends AppCompatActivity {
 
         gameContainer.addView(gameView);
 
+        // --- SỬ DỤNG SOUND MANAGER ĐỂ PHÁT NHẠC NỀN ---
         if (currentGameMode == GameMode.ENDLESS) {
-            playMusic(selectedTheme.musicEndlessId);
+            soundManager.playBackground(selectedTheme.musicEndlessId);
             isPhase2MusicPlaying = true;
         } else {
-            playMusic(selectedTheme.musicResId);
+            soundManager.playBackground(selectedTheme.musicResId);
             isPhase2MusicPlaying = false;
         }
 
@@ -279,7 +275,7 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        stopMusic();
+                        soundManager.stopBackground();
                         Toast.makeText(MainActivity.this, "GAME OVER!", Toast.LENGTH_LONG).show();
                         gameContainer.removeAllViews();
                         tvHelloWorld.setVisibility(View.VISIBLE);
@@ -317,6 +313,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
     private void showPauseMenu() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("GAME PAUSED");
@@ -336,6 +333,18 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 gameView.restartGame();
+
+                // Restart music logic
+                soundManager.stopBackground();
+                GameTheme theme = themes.get(currentThemeIndex);
+                if (currentGameMode == GameMode.ENDLESS) {
+                    soundManager.playBackground(theme.musicEndlessId);
+                    isPhase2MusicPlaying = true;
+                } else {
+                    soundManager.playBackground(theme.musicResId);
+                    isPhase2MusicPlaying = false;
+                }
+
                 dialog.dismiss();
             }
         });
@@ -345,22 +354,23 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if (gameView != null) {
-                    gameView.pauseGame();
+                    gameView.pauseGame(); // Đồng thời sẽ pause nhạc
                 }
                 finish();
                 startActivity(getIntent());
-//                //Loại bỏ hiệu ứng chuyển cảnh để cảm giác reset tức thì
-//                overridePendingTransition(0, 0);
+                overridePendingTransition(0, 0); // Loại bỏ hiệu ứng chuyển cảnh
             }
         });
 
         AlertDialog dialog = builder.create();
         dialog.show();
     }
+
     private void startPhase2Effect(int musicId) {
         gameView.pauseGame();
-        stopMusic();
-        playMusic(musicId);
+        soundManager.stopBackground();
+        soundManager.playBackground(musicId);
+
         final Random random = new Random();
         final Handler handler = new Handler();
 
@@ -414,41 +424,27 @@ public class MainActivity extends AppCompatActivity {
                 .start();
     }
 
-    private void playMusic(int resourceId) {
-        stopMusic();
-        mediaPlayer = MediaPlayer.create(this, resourceId);
-        if (mediaPlayer != null) {
-            mediaPlayer.setLooping(true);
-            mediaPlayer.start();
-        }
-    }
-
-    private void stopMusic() {
-        if (mediaPlayer != null) {
-            if (mediaPlayer.isPlaying()) mediaPlayer.stop();
-            mediaPlayer.release();
-            mediaPlayer = null;
-        }
-    }
-
     @Override
     protected void onPause() {
         super.onPause();
-        if (mediaPlayer != null && mediaPlayer.isPlaying()) mediaPlayer.pause();
+        if (soundManager != null) {
+            soundManager.pauseBackground();
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (mediaPlayer != null && !mediaPlayer.isPlaying()) mediaPlayer.start();
+        if (soundManager != null) {
+            soundManager.resumeBackground();
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        stopMusic();
+        // SoundManager release sẽ lo việc stop nhạc
         if (soundManager != null) soundManager.release();
         if (recognitionManager != null) recognitionManager.close();
     }
-
 }

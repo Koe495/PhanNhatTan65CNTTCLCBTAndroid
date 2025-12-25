@@ -1,6 +1,8 @@
 package cuoiki.helloworldgame;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -21,16 +23,36 @@ public class JokerGameLogic {
     private Paint cardPaint = new Paint();
     private Paint textPaint = new Paint();
 
+    // --- Biến chứa ảnh chất bài ---
+    private Bitmap bmpHeart, bmpDiamond, bmpClub, bmpSpade;
+    private int iconSize = 100;
+
     public JokerGameLogic(Context context) {
         this.context = context;
         deckManager = new JokerDeckManager(context);
         deckManager.drawCards(5);
 
-        textPaint.setColor(Color.WHITE);
-        textPaint.setTextSize(60);
-        textPaint.setTypeface(Typeface.DEFAULT_BOLD);
+        // textPaint.setColor(Color.WHITE); // Bỏ
+        // textPaint.setTextSize(60); // Bỏ
+        // textPaint.setTypeface(Typeface.DEFAULT_BOLD);
+
+        initSuitIcons(); // Gọi hàm tải ảnh
     }
 
+    // --- Tải và resize ảnh chất bài ---
+    private void initSuitIcons() {
+        // Load ảnh gốc từ resources
+        Bitmap originalHeart = BitmapFactory.decodeResource(context.getResources(), R.drawable.suit_heart);
+        Bitmap originalDiamond = BitmapFactory.decodeResource(context.getResources(), R.drawable.suit_diamond);
+        Bitmap originalClub = BitmapFactory.decodeResource(context.getResources(), R.drawable.suit_club);
+        Bitmap originalSpade = BitmapFactory.decodeResource(context.getResources(), R.drawable.suit_spade);
+
+        // Resize ảnh về kích thước chuẩn (100x100)
+        if (originalHeart != null) bmpHeart = Bitmap.createScaledBitmap(originalHeart, iconSize, iconSize, true);
+        if (originalDiamond != null) bmpDiamond = Bitmap.createScaledBitmap(originalDiamond, iconSize, iconSize, true);
+        if (originalClub != null) bmpClub = Bitmap.createScaledBitmap(originalClub, iconSize, iconSize, true);
+        if (originalSpade != null) bmpSpade = Bitmap.createScaledBitmap(originalSpade, iconSize, iconSize, true);
+    }
     // --- TÍNH SÁT THƯƠNG LÁ BÀI ---
     private int getCardPower(String rank) {
         rank = rank.toLowerCase();
@@ -74,12 +96,24 @@ public class JokerGameLogic {
     public void draw(Canvas canvas, int screenWidth, int screenHeight) {
         // 1. Tạo kẻ địch
         for (FallingChar fc : fallingSuits) {
-            if (fc.character.equalsIgnoreCase("heart") || fc.character.equalsIgnoreCase("tile")) {
-                textPaint.setColor(Color.RED);
-            } else {
-                textPaint.setColor(Color.WHITE);
+            Bitmap bitmapToDraw = null;
+
+            // Kiểm tra tên chất trong fallingChar để chọn ảnh đúng
+            if (fc.character.equalsIgnoreCase("heart")) {
+                bitmapToDraw = bmpHeart;
+            } else if (fc.character.equalsIgnoreCase("diamond")) {
+                bitmapToDraw = bmpDiamond;
+            } else if (fc.character.equalsIgnoreCase("club")) {
+                bitmapToDraw = bmpClub;
+            } else if (fc.character.equalsIgnoreCase("spade")) {
+                bitmapToDraw = bmpSpade;
             }
-            canvas.drawText(fc.character.toUpperCase(), fc.x, fc.y, textPaint);
+
+            if (bitmapToDraw != null) {
+                // Vẽ ảnh tại vị trí x, y.
+                // Trừ đi một nửa kích thước để tâm ảnh nằm đúng tọa độ của kẻ địch.
+                canvas.drawBitmap(bitmapToDraw, fc.x - iconSize / 2f, fc.y - iconSize / 2f, null);
+            }
         }
 
         // 2. tạo bài trên tay
@@ -144,7 +178,7 @@ public class JokerGameLogic {
                 textUpper = "9";
             }
         }
-        if (textUpper.equals("0") || textUpper.equals("X")) {
+        if (textUpper.equals("0") || textUpper.equals("X") || textUpper.equals("O")) {
             textUpper = "10";
         }
 

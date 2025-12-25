@@ -5,9 +5,9 @@ import android.graphics.Bitmap;
 public class Card {
     public enum Suit {
         HEART("heart"),
-        SPADE("pike"),
-        CLOVER("clover"),
-        TILE("tile");
+        DIAMOND("diamond"),
+        CLUB("club"),
+        SPADE("spade");
 
         public final String name;
         Suit(String name) { this.name = name; }
