@@ -91,7 +91,7 @@ public class QTEObject {
         float startX = x - (dirX * currentRecoil);
         float startY = y - (dirY * currentRecoil);
 
-        float beamLength = 2000f;
+        float beamLength = 2500f;
         float endX = startX + (dirX * beamLength);
         float endY = startY + (dirY * beamLength);
 

@@ -91,7 +91,7 @@ public class GameView extends View {
     }
 
     private void init() {
-        textPaint.setTextSize(80);
+        textPaint.setTextSize(160);
         textPaint.setFakeBoldText(true);
 
         drawPaint.setStrokeWidth(15);

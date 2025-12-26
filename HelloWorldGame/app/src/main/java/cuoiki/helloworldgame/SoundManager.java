@@ -18,6 +18,7 @@ public class SoundManager {
     private int soundGameModeChangeId;
     private int soundHealId;
     private int soundQTEAppearId;
+    private int soundFiringId;
 
     public SoundManager(Context context) {
         this.context = context;
@@ -27,9 +28,8 @@ public class SoundManager {
         soundThemeChangeId = soundPool.load(context, R.raw.select, 1);
         soundGameModeChangeId = soundPool.load(context, R.raw.select, 1);
         soundHealId = soundPool.load(context, R.raw.heal, 1);
-
-        // Cập nhật: Tải âm thanh cho QTE (Blaster Appear)
         soundQTEAppearId = soundPool.load(context, R.raw.undertale_create_qte, 1);
+        soundFiringId = soundPool.load(context, R.raw.blaster_firing, 1);
     }
 
     private void initSoundPool() {
@@ -55,7 +55,7 @@ public class SoundManager {
     // --- BACKGROUND MUSIC CONTROL ---
 
     public void playBackground(int resId) {
-        stopBackground(); // Dừng bài cũ nếu có
+        stopBackground();
         backgroundPlayer = MediaPlayer.create(context, resId);
         if (backgroundPlayer != null) {
             backgroundPlayer.setLooping(true); // Nhạc nền luôn lặp lại
@@ -125,16 +125,14 @@ public class SoundManager {
 
     // --- BLASTER / QTE SOUNDS ---
     public void playBlasterAppear() {
-        // Cập nhật: Phát âm thanh QTE chính xác
         if (soundQTEAppearId != 0) {
             soundPool.play(soundQTEAppearId, 0.8f, 0.8f, 1, 0, 1f);
         }
     }
 
     public void playBlasterFire() {
-        // Tái sử dụng âm thanh nổ target (pop2) nhưng pitch thấp (0.5x) để tạo tiếng bass dày "Bùm"
-        if (soundExplodeTargetId != 0) {
-            soundPool.play(soundExplodeTargetId, 1f, 1f, 2, 0, 0.5f);
+        if (soundFiringId != 0) {
+            soundPool.play(soundFiringId, 1f, 1f, 2, 0, 1f);
         }
     }
 
