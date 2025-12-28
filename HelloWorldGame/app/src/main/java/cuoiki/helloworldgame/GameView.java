@@ -30,7 +30,7 @@ public class GameView extends View {
     private static final String TARGET_FULL = "helloworld";
     private static final int PHASE_SKIP_DIFF = 40;
     private static final long BASE_SPAWN_DELAY = 2000;
-    private static final long JOKER_SPAWN_DELAY = 2000;
+    private static final long JOKER_SPAWN_DELAY = 1000;
     private static final int TARGET_SPAWN_RATE = 20;
 
     // --- PAINTS ---
@@ -76,6 +76,19 @@ public class GameView extends View {
     private GestureDetector gestureDetector;
     private JokerGameLogic jokerLogic;
 
+    // --- HANDLER QUẢN LÝ UI & DRAWING ---
+    // Dùng handler này để quản lý việc xóa nét vẽ và game loop
+    private Handler uiHandler = new Handler(Looper.getMainLooper());
+
+    // Runnable để xóa nét vẽ sau một khoảng trễ (dùng cho trường hợp vẽ sai)
+    private Runnable clearPathRunnable = new Runnable() {
+        @Override
+        public void run() {
+            currentPath.reset();
+            invalidate();
+        }
+    };
+
     public interface GameOverListener {
         void onScoreUpdate(int score);
         void onDiffUpdate(int diff);
@@ -83,6 +96,7 @@ public class GameView extends View {
         void onGameWin();
         void onPhase2Start();
         void onPauseRequest();
+        void onBossHpUpdate(int currentHp, int maxHp);
     }
 
     public GameView(Context context) {
@@ -134,7 +148,6 @@ public class GameView extends View {
                 if (tapCount == 3) {
                     tapCount = 0;
                     if (!isGameOver && !isVictory) {
-                        // Gọi hàm pauseGame tập trung để xử lý cả nhạc và QTE
                         pauseGame();
                         if (listener != null) listener.onPauseRequest();
                     }
@@ -145,25 +158,27 @@ public class GameView extends View {
         });
     }
 
-    public void setGameOverListener(GameOverListener listener) { this.listener = listener; }
+    public void setGameOverListener(GameOverListener listener) {
+        this.listener = listener;
+        if (isJokerMode && jokerLogic != null && jokerLogic.getBoss() != null) {
+            listener.onBossHpUpdate(jokerLogic.getBoss().hp, jokerLogic.getBoss().maxHp);
+        }
+    }
     public void setRecognitionManager(RecognitionManager manager) { this.recognitionManager = manager; }
     public void setSoundManager(SoundManager soundManager) { this.soundManager = soundManager; }
 
-    // --- CẬP NHẬT LOGIC PAUSE/RESUME ---
+    public int getScore() {
+        return score;
+    }
     public void pauseGame() {
         isPaused = true;
-        // Dừng nhạc nền khi pause
-        if (soundManager != null) {
-            soundManager.pauseBackground();
-        }
+        if (soundManager != null) soundManager.pauseBackground();
     }
 
     public void resumeGame() {
         isPaused = false;
-        // Tiếp tục nhạc nền khi resume
-        if (soundManager != null) {
-            soundManager.resumeBackground();
-        }
+        if (soundManager != null) soundManager.resumeBackground();
+        startGameLoop(); // Đảm bảo loop chạy lại
     }
 
     public void setGameConfig(GameTheme theme, GameMode mode) {
@@ -173,6 +188,21 @@ public class GameView extends View {
 
         if (isJokerMode) {
             jokerLogic = new JokerGameLogic(getContext());
+
+            if (jokerLogic.getBoss() != null) {
+                jokerLogic.getBoss().setListener(new JokerBoss.BossListener() {
+                    @Override
+                    public void onHpChanged(int currentHp, int maxHp) {
+                        if (listener != null) {
+                            listener.onBossHpUpdate(currentHp, maxHp);
+                        }
+                    }
+                });
+
+                if (listener != null) {
+                    listener.onBossHpUpdate(jokerLogic.getBoss().hp, jokerLogic.getBoss().maxHp);
+                }
+            }
         } else {
             jokerLogic = null;
         }
@@ -245,21 +275,33 @@ public class GameView extends View {
     }
 
     private void startGameLoop() {
-        final Handler handler = new Handler(Looper.getMainLooper());
-        handler.post(new Runnable() {
+        uiHandler.removeCallbacksAndMessages(null);
+
+        final Runnable gameLoop = new Runnable() {
             @Override
             public void run() {
-                if (!isGameOver || isVictory) {
+                if (!isGameOver) {
                     updateGame();
                     invalidate();
-                    handler.postDelayed(this, 16);
+                    uiHandler.postDelayed(this, 16);
                 }
             }
-        });
+        };
+        uiHandler.post(gameLoop);
+    }
+
+    // Hàm phụ để update particle khi đã thắng (làm màu)
+    private void updateParticlesOnly() {
+        Iterator<Particle> pIter = particles.iterator();
+        while (pIter.hasNext()) {
+            Particle p = pIter.next();
+            p.update();
+            if (p.isDead()) pIter.remove();
+        }
     }
 
     private void updateGame() {
-        // Cập nhật Particles (vẫn cho phép chạy hiệu ứng nổ còn sót lại hoặc dừng tuỳ ý, ở đây tôi để chạy)
+        // 1. Update Particles
         Iterator<Particle> pIter = particles.iterator();
         while (pIter.hasNext()) {
             Particle p = pIter.next();
@@ -267,18 +309,28 @@ public class GameView extends View {
             if (p.isDead()) pIter.remove();
         }
 
-        // --- CẬP NHẬT: Ngăn QTE update nếu đang Pause ---
+        // 2. QTE Logic (Undertale Mode)
         if (qteManager != null && currentMode == GameMode.ENDLESS && currentTheme.name.equalsIgnoreCase("Undertale")) {
-            if (!isPaused) { // Chỉ update QTE khi KHÔNG pause
-                qteManager.update(0.0166667f);
-            }
+            qteManager.update(0.0166667f);
         }
 
-        // Nếu đang pause thì dừng toàn bộ logic game phía dưới (sinh quái, di chuyển quái)
-        if (isVictory || isPaused) return;
+        if (isPaused) return;
 
+        // 3. Game Logic (Joker hoặc Classic)
         if (isJokerMode) {
             int damage = jokerLogic.update(screenHeight);
+
+            // Kiểm tra thắng Boss
+            if (jokerLogic.getBoss() != null && jokerLogic.getBoss().hp <= 0) {
+                if (!isVictory) {
+                    isVictory = true;
+                    isGameOver = true;
+                    if (listener != null) listener.onGameWin();
+                }
+                return;
+            }
+
+            // Xử lý damage từ boss
             if (damage > 0) {
                 score -= damage;
                 if (listener != null) listener.onScoreUpdate(score);
@@ -287,11 +339,15 @@ public class GameView extends View {
                     if (listener != null) listener.onGameOver();
                 }
             }
+
+            // Spawn quái Joker
             if (System.currentTimeMillis() - lastSpawnTime > JOKER_SPAWN_DELAY) {
                 jokerLogic.trySpawnEnemy(screenWidth);
                 lastSpawnTime = System.currentTimeMillis();
             }
-        } else {
+        }
+        else {
+            // Logic Classic/Endless
             long currentSpawnDelay = Math.max(500, BASE_SPAWN_DELAY - (diff * 25L));
             if (System.currentTimeMillis() - lastSpawnTime > currentSpawnDelay) {
                 spawnEnemy();
@@ -349,7 +405,7 @@ public class GameView extends View {
         float baseSpeed = baseSpeedParam + (diff / 10.0f);
         float finalSpeed = baseSpeed + random.nextInt(3);
 
-        fallingChars.add(new FallingChar(charToSpawn, random.nextInt(screenWidth - 100) + 50, 0, finalSpeed, isTargetChar));
+        fallingChars.add(new FallingChar(charToSpawn, random.nextInt(screenWidth - 150) + 20, 0, finalSpeed, isTargetChar));
     }
 
     @Override
@@ -365,7 +421,7 @@ public class GameView extends View {
         } else {
             if (currentMode == GameMode.CLASSIC) {
                 float startX = 50;
-                float startY = screenHeight - 150;
+                float startY = screenHeight - 100;
                 float spacing = 60;
                 for (int i = 0; i < TARGET_FULL.length(); i++) {
                     String c = String.valueOf(TARGET_FULL.charAt(i));
@@ -392,15 +448,21 @@ public class GameView extends View {
         canvas.drawPath(currentPath, drawPaint);
     }
 
+    // --- HÀM HỖ TRỢ XÓA NÉT VẼ NGAY LẬP TỨC ---
+    private void resetPathInstantly() {
+        uiHandler.removeCallbacks(clearPathRunnable); // Hủy lệnh xóa trễ nếu có
+        currentPath.reset();
+        invalidate();
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (isPaused || isGameOver || isVictory) return true;
+        if (isPaused || isGameOver) return true; // Chặn touch khi game over/pause
 
         if (gestureDetector.onTouchEvent(event)) {
             inkBuilder = Ink.builder();
             strokeBuilder = null;
-            currentPath.reset();
-            invalidate();
+            resetPathInstantly(); // Xóa ngay nếu detect double/triple tap
             return true;
         }
 
@@ -414,10 +476,14 @@ public class GameView extends View {
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                // Hủy lệnh xóa cũ ngay khi đặt tay xuống vẽ tiếp
+                uiHandler.removeCallbacks(clearPathRunnable);
+
                 currentPath.moveTo(x, y);
                 strokeBuilder = Ink.Stroke.builder();
                 strokeBuilder.addPoint(Ink.Point.create(x, y, t));
                 break;
+
             case MotionEvent.ACTION_MOVE:
                 currentPath.lineTo(x, y);
                 if (strokeBuilder != null) {
@@ -443,13 +509,9 @@ public class GameView extends View {
                     strokeBuilder = null;
                 }
 
-                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        currentPath.reset();
-                        invalidate();
-                    }
-                }, 200);
+                // Mặc định vẫn chờ 200ms để xóa (nếu vẽ sai)
+                // Nhưng nếu vẽ trúng, hàm checkMatch sẽ gọi resetPathInstantly() để hủy lệnh này.
+                uiHandler.postDelayed(clearPathRunnable, 200);
                 break;
         }
 
@@ -460,10 +522,14 @@ public class GameView extends View {
     private void checkMatch(String recognizedText) {
         String textRaw = recognizedText;
         String textUpper = recognizedText.toUpperCase();
+        boolean anyHit = false; // Cờ đánh dấu có trúng hay không
 
         if (isJokerMode) {
             boolean hit = jokerLogic.checkMatch(recognizedText);
-            if (hit && soundManager != null) soundManager.playExplodeNormal();
+            if (hit) {
+                anyHit = true;
+                if (soundManager != null) soundManager.playExplodeNormal();
+            }
         } else {
             Iterator<FallingChar> iter = fallingChars.iterator();
             while (iter.hasNext()) {
@@ -471,6 +537,8 @@ public class GameView extends View {
                 boolean isMatch = isMatchingChar(fc, textRaw, textUpper);
 
                 if (isMatch) {
+                    anyHit = true; // Đánh trúng
+
                     float hitX = fc.x;
                     float hitY = fc.y - 30;
                     iter.remove();
@@ -484,9 +552,15 @@ public class GameView extends View {
                         if (soundManager != null) soundManager.playExplodeNormal();
                         spawnExplosion(hitX, hitY, Color.DKGRAY, 10, 5);
                     }
+                    // Chỉ diệt 1 con gần nhất/đầu tiên tìm thấy
                     break;
                 }
             }
+        }
+
+        // Nếu trúng, xóa nét vẽ
+        if (anyHit) {
+            resetPathInstantly();
         }
     }
 
@@ -529,11 +603,27 @@ public class GameView extends View {
 
         if (isJokerMode && jokerLogic != null) {
             jokerLogic = new JokerGameLogic(getContext());
+
+            if (jokerLogic.getBoss() != null) {
+                jokerLogic.getBoss().setListener(new JokerBoss.BossListener() {
+                    @Override
+                    public void onHpChanged(int currentHp, int maxHp) {
+                        if (listener != null) {
+                            listener.onBossHpUpdate(currentHp, maxHp);
+                        }
+                    }
+                });
+
+                if (listener != null) {
+                    listener.onBossHpUpdate(jokerLogic.getBoss().hp, jokerLogic.getBoss().maxHp);
+                }
+            }
         }
 
         if (listener != null) listener.onScoreUpdate(score);
         invalidate();
 
+        startGameLoop(); // Đảm bảo loop chạy lại
         lastSpawnTime = System.currentTimeMillis();
     }
 
@@ -564,16 +654,10 @@ public class GameView extends View {
             switch (enemy) {
                 case "_": return textRaw.equals("_") || textRaw.equals("-");
                 case "^": return textRaw.equals("^") || textRaw.equals("1") || textRaw.equals("A");
-
                 case "(": return textRaw.equals("(") || textRaw.equals("<") || textRaw.equals("[") || textRaw.equals("C") || textRaw.equals("c");
-
                 case ")": return textRaw.equals(")") || textRaw.equals(">") || textRaw.equals("]") || textRaw.equals("J") || textRaw.equals("j");
-
                 case "v": return textRaw.equals("U") || textRaw.equals("v") || textRaw.equals("V");
-
-                // Phòng trường hợp cần dùng lại
                 case "/": return textRaw.equals("/") || textRaw.equals("1") || textRaw.equals("l") || textUpper.equals("I");
-
                 default: return enemy.equals(textUpper);
             }
         }
@@ -610,8 +694,10 @@ public class GameView extends View {
         }
     }
 
-    private void spawnExplosion(float x, float y, int color, int count, float sizeBase) {
-        for (int i = 0; i < count; i++) {
+    public void spawnExplosion(float x, float y, int color, int count, float sizeBase) {
+        // Giới hạn số lượng hạt nổ để tránh lag nếu spam nhiều
+        int safeCount = Math.min(count, 20);
+        for (int i = 0; i < safeCount; i++) {
             particles.add(new Particle(x, y, color, sizeBase + random.nextInt(10)));
         }
     }
@@ -619,6 +705,7 @@ public class GameView extends View {
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
+        uiHandler.removeCallbacksAndMessages(null);
         isGameOver = true;
         isPaused = true;
     }

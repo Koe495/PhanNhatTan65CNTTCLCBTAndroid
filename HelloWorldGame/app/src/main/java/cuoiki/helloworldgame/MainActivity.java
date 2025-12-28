@@ -16,6 +16,7 @@ import android.view.ViewGroup;
 import android.view.ViewPropertyAnimator;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -45,6 +46,11 @@ public class MainActivity extends AppCompatActivity {
     private ParticleBackgroundView particleView;
     private TextView tvClassicScores, tvEndlessScores;
     private boolean isHighScoreVisible = false;
+
+    // --- BOSS UI ---
+    private View bossHudView; // View chứa thanh máu XML
+    private ProgressBar pbBossHealth;
+    private TextView tvBossHp;
 
     // --- Game Logic Components ---
     private GameView gameView;
@@ -125,7 +131,56 @@ public class MainActivity extends AppCompatActivity {
     private void showHighScoreScreen() {
         if (isHighScoreVisible) return;
         isHighScoreVisible = true;
-        loadHighScoreData();
+
+        // Lấy theme hiện tại
+        GameTheme currentTheme = themes.get(currentThemeIndex);
+
+        // Áp dụng giao diện (Màu nền, Font chữ, Màu chữ)
+        highScoreView.setBackgroundColor(currentTheme.bgColor);
+
+        // Cập nhật Font chữ cho bảng điểm
+        Typeface tf = Typeface.DEFAULT;
+        if (currentTheme.fontResId != 0) {
+            try {
+                tf = ResourcesCompat.getFont(this, currentTheme.fontResId);
+            } catch (Exception e) { e.printStackTrace(); }
+        }
+
+        TextView tvTitle = highScoreView.findViewById(R.id.tvHighScoreTile);
+        TextView tvLabelClassic = highScoreView.findViewById(R.id.labelClassic); // Label "Classic Mode"
+        TextView tvLabelEndless = highScoreView.findViewById(R.id.labelEndless); // Label "Endless Mode"
+
+        // Áp dụng màu và font
+        int textColor = currentTheme.textColor;
+        int strokeColor = currentTheme.strokeColor; // Dùng màu stroke cho điểm nhấn
+
+        if (tvTitle != null) {
+            tvTitle.setTextColor(strokeColor);
+            tvTitle.setTypeface(tf);
+        }
+        if (tvLabelClassic != null) {
+            tvLabelClassic.setTextColor(textColor);
+            tvLabelClassic.setTypeface(tf);
+        }
+        if (tvLabelEndless != null) {
+            tvLabelEndless.setTextColor(textColor);
+            tvLabelEndless.setTypeface(tf);
+        }
+
+        tvClassicScores.setTextColor(textColor);
+        tvClassicScores.setTypeface(tf);
+
+        tvEndlessScores.setTextColor(textColor);
+        tvEndlessScores.setTypeface(tf);
+
+        // Cập nhật màu cho Particle
+        if (particleView != null) {
+            particleView.setParticleColor(currentTheme.textColor);
+        }
+
+        // Load dữ liệu theo Theme
+        loadHighScoreData(currentTheme.name);
+
         int screenHeight = rootContainer.getHeight();
         highScoreView.setTranslationY(screenHeight);
         highScoreView.setVisibility(View.VISIBLE);
@@ -140,26 +195,70 @@ public class MainActivity extends AppCompatActivity {
         isHighScoreVisible = false;
         int screenHeight = rootContainer.getHeight();
         tvHelloWorld.animate().translationY(0).setDuration(500).start();
-        highScoreView.animate().translationY(screenHeight).setDuration(500).withEndAction(() -> {
-            highScoreView.setVisibility(View.INVISIBLE);
-            particleView.stopAnimation();
-        }).start();
+        highScoreView.animate().translationY(screenHeight).setDuration(500).withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        highScoreView.setVisibility(View.INVISIBLE);
+                        particleView.stopAnimation();
+                    }
+                })
+                .start();
     }
 
-    private void loadHighScoreData() {
-        List<String> classicScores = dbHelper.getTopScores(GameMode.CLASSIC.toString());
+    private void loadHighScoreData(String themeName) {
+        // Lấy Classic Score của Theme này
+        List<String> classicScores = dbHelper.getTopScores(GameMode.CLASSIC.toString(), themeName);
         StringBuilder sbClassic = new StringBuilder();
         for (String s : classicScores) sbClassic.append(s).append("\n");
         tvClassicScores.setText(sbClassic.toString());
 
-        List<String> endlessScores = dbHelper.getTopScores(GameMode.ENDLESS.toString());
+        // Lấy Endless Score của Theme này
+        List<String> endlessScores = dbHelper.getTopScores(GameMode.ENDLESS.toString(), themeName);
         StringBuilder sbEndless = new StringBuilder();
         for (String s : endlessScores) sbEndless.append(s).append("\n");
         tvEndlessScores.setText(sbEndless.toString());
     }
 
+// --- XML BOSS HUD ---
+    private void showBossHud(int maxHp) {
+        if (bossHudView != null) return;
+
+        LayoutInflater inflater = LayoutInflater.from(this);
+        bossHudView = inflater.inflate(R.layout.layout_boss_hud, rootContainer, false);
+
+        pbBossHealth = bossHudView.findViewById(R.id.pbBossHealth);
+        tvBossHp = bossHudView.findViewById(R.id.tvBossHp);
+
+        pbBossHealth.setMax(maxHp);
+        pbBossHealth.setProgress(maxHp);
+        tvBossHp.setText(maxHp + "/" + maxHp);
+
+        rootContainer.addView(bossHudView);
+    }
+
+    private void updateBossHud(int currentHp, int maxHp) {
+        if (pbBossHealth != null) {
+            pbBossHealth.setProgress(currentHp, true);
+            tvBossHp.setText(currentHp + "/" + maxHp);
+
+            // Nếu Boss chết, ẩn đi
+            if (currentHp <= 0) {
+                hideBossHud();
+            }
+        }
+    }
+
+    private void hideBossHud() {
+        if (bossHudView != null) {
+            rootContainer.removeView(bossHudView);
+            bossHudView = null;
+            pbBossHealth = null;
+            tvBossHp = null;
+        }
+    }
+
     private void returnToMenu() {
-        // Xóa menu pause/gameover nếu còn tồn tại
+        hideBossHud();
         if (pauseMenuView != null) rootContainer.removeView(pauseMenuView);
         if (gameOverMenuView != null) rootContainer.removeView(gameOverMenuView);
         pauseMenuView = null;
@@ -175,57 +274,70 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // --- SHOW PAUSE MENU ---
-    private void showPauseMenu() {
-        // Ngăn chặn tạo nhiều view chồng lên nhau
-        if (pauseMenuView != null) return;
+    private void showPauseMenu() {// Kiểm tra nếu đã có menu thì không tạo thêm
+        if (pauseMenuView != null) {
+            pauseMenuView.bringToFront(); // Đảm bảo nó nổi lên trên
+            return;
+        }
 
         LayoutInflater inflater = LayoutInflater.from(this);
+        // Sử dụng rootContainer làm parent
         pauseMenuView = inflater.inflate(R.layout.layout_pause_menu, rootContainer, false);
         rootContainer.addView(pauseMenuView);
+        pauseMenuView.bringToFront();
 
         // Ánh xạ buttons
         Button btnResume = pauseMenuView.findViewById(R.id.btnResume);
         Button btnRestart = pauseMenuView.findViewById(R.id.btnRestart);
         Button btnMenu = pauseMenuView.findViewById(R.id.btnMenu);
 
-        // Resume
-        btnResume.setOnClickListener(v -> {
-            rootContainer.removeView(pauseMenuView);
-            pauseMenuView = null;
-            if (gameView != null) gameView.resumeGame();
+        // Resume Button
+        btnResume.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                rootContainer.removeView(pauseMenuView);
+                pauseMenuView = null;
+                if (gameView != null) {
+                    gameView.resumeGame(); // Đảm bảo GameView đã xử lý logic isPaused = false
+                }
+            }
         });
 
-        // Restart
-        btnRestart.setOnClickListener(v -> {
-            rootContainer.removeView(pauseMenuView);
-            pauseMenuView = null;
-            restartGameLogic();
+        // Restart Button
+        btnRestart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                rootContainer.removeView(pauseMenuView);
+                pauseMenuView = null;
+                restartGameLogic();
+            }
         });
 
-        // Main Menu
-        btnMenu.setOnClickListener(v -> {
-            if (gameView != null) gameView.pauseGame(); // Dừng logic
-            returnToMenu();
+        // Main Menu Button
+        btnMenu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (gameView != null) {
+                    gameView.pauseGame();
+                }
+                returnToMenu();
+            }
         });
     }
 
+
     // --- SHOW GAME OVER MENU ---
     private void showGameOverDialog(boolean isWin) {
-        // Xóa menu cũ nếu có
         if (gameOverMenuView != null) rootContainer.removeView(gameOverMenuView);
-
         LayoutInflater inflater = LayoutInflater.from(this);
         gameOverMenuView = inflater.inflate(R.layout.layout_game_over, rootContainer, false);
         rootContainer.addView(gameOverMenuView);
-
-        // Ánh xạ Views
         TextView tvTitle = gameOverMenuView.findViewById(R.id.tvTitle);
         TextView tvCurrentResult = gameOverMenuView.findViewById(R.id.tvCurrentResult);
         TextView tvHighScoreList = gameOverMenuView.findViewById(R.id.tvHighScoreList);
         Button btnReplay = gameOverMenuView.findViewById(R.id.btnReplay);
         Button btnMenu = gameOverMenuView.findViewById(R.id.btnMenu);
 
-        // Set nội dung
         if (isWin) {
             tvTitle.setText("YOU WIN!");
             tvTitle.setTextColor(Color.GREEN);
@@ -233,26 +345,28 @@ public class MainActivity extends AppCompatActivity {
             tvTitle.setText("GAME OVER");
             tvTitle.setTextColor(Color.RED);
         }
-
         tvCurrentResult.setText("Max Difficulty: " + currentMaxDiff);
 
-        // Load High Score
-        List<String> topScores = dbHelper.getTopScores(currentGameMode.toString());
-        StringBuilder sb = new StringBuilder();
-        for (String s : topScores) sb.append(s).append("\n");
-        tvHighScoreList.setText(sb.toString());
-
         // Replay Button
-        btnReplay.setOnClickListener(v -> {
-            rootContainer.removeView(gameOverMenuView);
-            gameOverMenuView = null;
-            // Xoá game cũ, init lại
-            gameContainer.removeAllViews();
-            initGame();
+        btnReplay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                rootContainer.removeView(gameOverMenuView);
+                gameOverMenuView = null;
+                // Xoá game cũ, init lại
+                gameContainer.removeAllViews();
+                initGame();
+            }
         });
 
         // Menu Button
-        btnMenu.setOnClickListener(v -> returnToMenu());
+        btnMenu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                returnToMenu();
+            }
+        });
+
     }
 
     // Hàm hỗ trợ Restart
@@ -270,7 +384,7 @@ public class MainActivity extends AppCompatActivity {
     private void initThemes() {
         themes.add(new GameTheme("Classic", Color.WHITE, Color.BLACK, Color.RED, 0, R.raw.carefree, R.raw.azali_phase2, R.raw.pop, R.raw.pop2, R.raw.azali_phase2));
         themes.add(new GameTheme("Undertale", Color.BLACK, Color.WHITE, Color.BLUE, R.font.undertale_sans, R.raw.undertale_phase1, R.raw.undertale_phase2, R.raw.pop, R.raw.pop2_undertale, R.raw.undertale_endless));
-        themes.add(new GameTheme("Joker", Color.WHITE, Color.BLACK, Color.RED, 0, R.raw.joker_menu_music, R.raw.joker_menu_music, R.raw.pop, R.raw.pop2, R.raw.joker_menu_music));
+        themes.add(new GameTheme("Joker", Color.WHITE, Color.BLACK, Color.RED, R.font.imfellenglish_regular, R.raw.joker_menu_music, R.raw.joker_menu_music, R.raw.pop, R.raw.pop2, R.raw.joker_menu_music));
     }
 
     private void changeTheme(int direction) {
@@ -318,14 +432,14 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     private void startOpeningAnimation() {
-        // 1. Lấy thông tin từ TextView gốc
+        // Lấy thông tin từ TextView gốc
         float originTextSize = tvHelloWorld.getTextSize();
         int originTextColor = tvHelloWorld.getCurrentTextColor();
         Typeface originTypeface = tvHelloWorld.getTypeface();
         android.text.Layout layout = tvHelloWorld.getLayout();
         String text = tvHelloWorld.getText().toString();
 
-        // 2. Tính toán vị trí
+        // Tính toán vị trí
         int[] tvLocation = new int[2];
         tvHelloWorld.getLocationInWindow(tvLocation);
 
@@ -435,43 +549,95 @@ public class MainActivity extends AppCompatActivity {
         gameView.setGameOverListener(new GameView.GameOverListener() {
             @Override
             public void onScoreUpdate(final int score) {
-                runOnUiThread(() -> tvScore.setText("HP: " + score));
-            }
-
-            @Override
-            public void onDiffUpdate(final int diff) {
-                currentMaxDiff = diff;
-                runOnUiThread(() -> tvDiff.setText("Diff: " + diff));
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        tvScore.setText("Score: " + score);
+                    }
+                });
             }
 
             @Override
             public void onGameOver() {
-                runOnUiThread(() -> {
-                    soundManager.stopBackground();
-                    if (dbHelper != null) dbHelper.addHighScore(currentMaxDiff, currentGameMode.toString());
-                    showGameOverDialog(false);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (soundManager != null) soundManager.stopBackground();
+                        if (dbHelper != null) {
+                            // TRUYỀN THÊM: selectedTheme.name
+                            dbHelper.addHighScore(gameView.getScore(), currentMaxDiff, currentGameMode.toString(), selectedTheme.name);
+                        }
+                        // Hiện Dialog thua cuộc (isWin = false)
+                        showGameOverDialog(false);
+                    }
                 });
             }
 
             @Override
             public void onGameWin() {
-                runOnUiThread(() -> {
-                    soundManager.stopBackground();
-                    if (dbHelper != null) dbHelper.addHighScore(currentMaxDiff, currentGameMode.toString());
-                    showGameOverDialog(true);
+                // XỬ LÝ KHI THẮNG JOKER MODE
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (soundManager != null) {
+                            soundManager.stopBackground();
+                            if (dbHelper != null) {
+                                // TRUYỀN THÊM: selectedTheme.name
+                                dbHelper.addHighScore(gameView.getScore(), currentMaxDiff, currentGameMode.toString(), selectedTheme.name);
+                            }
+                            // soundManager.playWinSound(); // Nếu có âm thanh thắng cuộc
+                        }
+                        showGameOverDialog(true);
+                    }
+                });
+            }
+
+            @Override
+            public void onDiffUpdate(int diff) {
+                currentMaxDiff = diff;
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        tvDiff.setText("Diff: " + currentMaxDiff);
+                    }
                 });
             }
 
             @Override
             public void onPhase2Start() {
-                runOnUiThread(() -> startPhase2Effect(selectedTheme.musicPhase2ResId));
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        startPhase2Effect(selectedTheme.musicPhase2ResId);
+                    }
+                });
             }
 
             @Override
             public void onPauseRequest() {
-                runOnUiThread(() -> showPauseMenu());
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        showPauseMenu();
+                    }
+                });
+            }
+
+            @Override
+            public void onBossHpUpdate(int currentHp, int maxHp) {
+                runOnUiThread(() -> {
+                    // Nếu maxHp > 0, tức là có Boss -> Hiện HUD
+                    if (maxHp > 0) {
+                        if (bossHudView == null) showBossHud(maxHp); // Hiện nếu chưa có
+                        updateBossHud(currentHp, maxHp); // Cập nhật
+                    } else {
+                        // Nếu maxHp = 0 -> Không có Boss -> Ẩn HUD
+                        hideBossHud();
+                    }
+                });
             }
         });
+
     }
 
     private void startPhase2Effect(int musicId) {
@@ -480,8 +646,6 @@ public class MainActivity extends AppCompatActivity {
         soundManager.playBackground(musicId);
         final Random random = new Random();
 
-        // --- SỬA LỖI DEPRECATED TẠI ĐÂY ---
-        // Sử dụng Looper.getMainLooper() để chỉ định rõ chạy trên UI Thread
         final Handler handler = new Handler(Looper.getMainLooper());
 
         handler.post(new Runnable() {
@@ -493,7 +657,7 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
                 spawnRisingRedChar(random);
-                handler.postDelayed(this, 60);
+                handler.postDelayed(this, 20);
             }
         });
     }
@@ -507,8 +671,16 @@ public class MainActivity extends AppCompatActivity {
         charView.setTextColor(themes.get(currentThemeIndex).strokeColor);
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         params.gravity = Gravity.BOTTOM | Gravity.START;
-        if (rootContainer.getWidth() > 0) params.leftMargin = random.nextInt(rootContainer.getWidth() - 100);
+
+        // Tính toán tọa độ X
+        int leftMargin = random.nextInt(rootContainer.getWidth() - 100);
+        params.leftMargin = leftMargin;
         rootContainer.addView(charView, params);
+
+        if (gameView != null) {
+            gameView.spawnExplosion(leftMargin, rootContainer.getHeight(), themes.get(currentThemeIndex).strokeColor, 10, 10);
+        }
+
         charView.bringToFront();
         charView.setElevation(1000f);
         charView.animate().translationY(-rootContainer.getHeight()).rotation(random.nextInt(360)).setDuration(500 + random.nextInt(500)).withEndAction(() -> rootContainer.removeView(charView)).start();

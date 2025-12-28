@@ -22,6 +22,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:id="@+id/tvHighScoreTile"
             android:text="HALL OF FAME"
             android:textSize="40sp"
             android:textStyle="bold"
@@ -33,6 +34,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:id="@+id/labelClassic"
             android:text="CLASSIC TRAVELLERS"
             android:textSize="22sp"
             android:textStyle="bold"
@@ -54,6 +56,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:id="@+id/labelEndless"
             android:text="ENDLESS SURVIVORS"
             android:textSize="22sp"
             android:textStyle="bold"

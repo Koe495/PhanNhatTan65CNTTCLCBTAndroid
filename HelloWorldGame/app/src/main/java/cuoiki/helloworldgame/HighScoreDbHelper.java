@@ -12,13 +12,16 @@ import java.util.List;
 public class HighScoreDbHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "HelloWorldGame.db";
-    private static final int DATABASE_VERSION = 1;
+    // Tăng version lên 3 để cập nhật cấu trúc bảng mới
+    private static final int DATABASE_VERSION = 3;
 
     // Tên bảng và các cột
     private static final String TABLE_NAME = "high_scores";
     private static final String COL_ID = "id";
-    private static final String COL_SCORE = "score";
+    private static final String COL_HP = "hp";
+    private static final String COL_DIFF = "difficulty";
     private static final String COL_MODE = "game_mode";
+    private static final String COL_THEME = "theme_name"; // CỘT MỚI: Lưu tên Theme
     private static final String COL_TIMESTAMP = "timestamp";
 
     public HighScoreDbHelper(Context context) {
@@ -29,55 +32,76 @@ public class HighScoreDbHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         String createTable = "CREATE TABLE " + TABLE_NAME + " (" +
                 COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                COL_SCORE + " INTEGER, " +
+                COL_HP + " INTEGER, " +
+                COL_DIFF + " INTEGER, " +
                 COL_MODE + " TEXT, " +
+                COL_THEME + " TEXT, " + // Thêm vào câu lệnh tạo bảng
                 COL_TIMESTAMP + " INTEGER)";
         db.execSQL(createTable);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        // Xóa bảng cũ và tạo lại (Dữ liệu cũ sẽ mất, chấp nhận trong quá trình dev)
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
         onCreate(db);
     }
 
-    public void addHighScore(int diffValue, String mode) {
+    // Cập nhật hàm thêm điểm: Thêm tham số themeName
+    public void addHighScore(int hp, int diff, String mode, String themeName) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        // Lưu giá trị Diff vào cột Score
-        values.put(COL_SCORE, diffValue);
+
+        values.put(COL_HP, hp);
+        values.put(COL_DIFF, diff);
         values.put(COL_MODE, mode);
+        values.put(COL_THEME, themeName); // Lưu theme
         values.put(COL_TIMESTAMP, System.currentTimeMillis());
 
         db.insert(TABLE_NAME, null, values);
         db.close();
     }
 
-    public List<String> getTopScores(String mode) {
+    // Cập nhật hàm lấy điểm: Lọc theo cả Mode và Theme
+    public List<String> getTopScores(String mode, String themeName) {
         List<String> scores = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
 
-        // Lấy Top 5 Diff cao nhất
+        String orderBy;
+
+        // Logic sắp xếp giữ nguyên
+        if (mode.equalsIgnoreCase("CLASSIC")) {
+            orderBy = COL_HP + " DESC, " + COL_DIFF + " ASC";
+        } else {
+            orderBy = COL_DIFF + " DESC, " + COL_HP + " DESC";
+        }
+
         Cursor cursor = db.query(
                 TABLE_NAME,
-                new String[]{COL_SCORE, COL_TIMESTAMP},
-                COL_MODE + "=?",
-                new String[]{mode},
+                new String[]{COL_HP, COL_DIFF},
+                COL_MODE + "=? AND " + COL_THEME + "=?", // Lọc theo Mode VÀ Theme
+                new String[]{mode, themeName},
                 null, null,
-                COL_SCORE + " DESC", // Sắp xếp theo Diff giảm dần
+                orderBy,
                 "5"
         );
 
         if (cursor != null && cursor.moveToFirst()) {
             int rank = 1;
             do {
-                int diffVal = cursor.getInt(cursor.getColumnIndexOrThrow(COL_SCORE));
-                scores.add("#" + rank + " - Diff: " + diffVal);
+                int hpVal = cursor.getInt(cursor.getColumnIndexOrThrow(COL_HP));
+                int diffVal = cursor.getInt(cursor.getColumnIndexOrThrow(COL_DIFF));
+
+                if (mode.equalsIgnoreCase("CLASSIC")) {
+                    scores.add("#" + rank + " - HP: " + hpVal + " (Diff: " + diffVal + ")");
+                } else {
+                    scores.add("#" + rank + " - Diff: " + diffVal + " (HP: " + hpVal + ")");
+                }
                 rank++;
             } while (cursor.moveToNext());
             cursor.close();
         } else {
-            scores.add("null");
+            scores.add("who?");
         }
         db.close();
         return scores;

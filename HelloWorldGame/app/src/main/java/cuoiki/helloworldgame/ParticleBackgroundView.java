@@ -16,13 +16,14 @@ import java.util.Random;
 
 public class ParticleBackgroundView extends View {
 
-    private class BlackParticle {
+    // Đổi tên class từ BlackParticle -> Particle cho tổng quát
+    private class Particle {
         float x, y;
         float speed;
         float size;
         int alpha;
 
-        BlackParticle(float x, float y, float speed, float size) {
+        Particle(float x, float y, float speed, float size) {
             this.x = x;
             this.y = y;
             this.speed = speed;
@@ -31,12 +32,15 @@ public class ParticleBackgroundView extends View {
         }
     }
 
-    private List<BlackParticle> particles = new ArrayList<>();
+    private List<Particle> particles = new ArrayList<>();
     private Paint paint;
     private Random random = new Random();
     private Handler handler = new Handler(Looper.getMainLooper());
     private boolean isAnimating = false;
     private long lastSpawnTime = 0;
+
+    // Mặc định là màu đen
+    private int particleColor = Color.BLACK;
 
     public ParticleBackgroundView(Context context) {
         super(context);
@@ -50,11 +54,19 @@ public class ParticleBackgroundView extends View {
 
     private void init() {
         paint = new Paint();
-        paint.setColor(Color.BLACK);
+        paint.setColor(particleColor);
         paint.setStyle(Paint.Style.FILL);
     }
 
+    // --- HÀM MỚI: ĐỔI MÀU PARTICLE ---
+    public void setParticleColor(int color) {
+        this.particleColor = color;
+        // Cập nhật ngay màu cho bút vẽ
+        paint.setColor(this.particleColor);
+    }
+
     public void startAnimation() {
+        if (isAnimating) return; // Tránh start chồng chéo
         isAnimating = true;
         particles.clear();
         invalidate();
@@ -80,21 +92,23 @@ public class ParticleBackgroundView extends View {
             float size = 5 + random.nextInt(15); // Kích thước nhỏ
             float x = random.nextInt(w);
             float speed = 3 + random.nextInt(5);
-            particles.add(new BlackParticle(x, h + size, speed, size));
+            particles.add(new Particle(x, h + size, speed, size));
             lastSpawnTime = currentTime;
         }
 
         // 2. Update & Draw
-        Iterator<BlackParticle> iterator = particles.iterator();
+        Iterator<Particle> iterator = particles.iterator();
         while (iterator.hasNext()) {
-            BlackParticle p = iterator.next();
+            Particle p = iterator.next();
             p.y -= p.speed; // Bay lên
             p.alpha -= 2;   // Mờ dần
 
             if (p.alpha <= 0 || p.y < -50) {
                 iterator.remove();
             } else {
-                paint.setAlpha(p.alpha);
+                // QUAN TRỌNG: Reset về màu gốc của Theme trước khi set Alpha
+                paint.setColor(particleColor);
+                paint.setAlpha(p.alpha); // Áp dụng độ mờ
                 canvas.drawCircle(p.x, p.y, p.size, paint);
             }
         }
@@ -103,8 +117,17 @@ public class ParticleBackgroundView extends View {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                invalidate();
+                if (isAnimating) {
+                    invalidate();
+                }
             }
         }, 16);
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        stopAnimation();
+        handler.removeCallbacksAndMessages(null);
     }
 }
