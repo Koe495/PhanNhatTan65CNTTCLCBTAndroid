@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper; // Đã thêm import này
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -478,7 +479,11 @@ public class MainActivity extends AppCompatActivity {
         soundManager.stopBackground();
         soundManager.playBackground(musicId);
         final Random random = new Random();
-        final Handler handler = new Handler();
+
+        // --- SỬA LỖI DEPRECATED TẠI ĐÂY ---
+        // Sử dụng Looper.getMainLooper() để chỉ định rõ chạy trên UI Thread
+        final Handler handler = new Handler(Looper.getMainLooper());
+
         handler.post(new Runnable() {
             long startTime = System.currentTimeMillis();
             @Override
