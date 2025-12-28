@@ -26,7 +26,7 @@ import java.util.Random;
 public class GameView extends View {
 
     // --- CONSTANTS ---
-    private static final String ENEMIES_CHARS = "_/>^ZNMUJC";
+    private static final String ENEMIES_CHARS = "_()^ZNMv";
     private static final String TARGET_FULL = "helloworld";
     private static final int PHASE_SKIP_DIFF = 40;
     private static final long BASE_SPAWN_DELAY = 2000;
@@ -539,18 +539,41 @@ public class GameView extends View {
 
     private boolean isMatchingChar(FallingChar fc, String textRaw, String textUpper) {
         if (fc.isTarget) {
-            if (textRaw.equals("0")) return fc.character.equals("O");
+            if (fc.character.equalsIgnoreCase("O")) {
+                return textRaw.equals("0") ||
+                        textUpper.equals("O") ||
+                        textRaw.equals("6") ||
+                        textUpper.equals("D");
+            }
+
+            if (fc.character.equals("l")) {
+                return textRaw.equals("1") ||
+                        textUpper.equals("L") ||
+                        textRaw.equals("|") ||
+                        textRaw.equals("\\") ||
+                        textRaw.equals("/");
+            }
+
+            if (fc.character.equals("h")) {
+                return textRaw.equals("n") || textRaw.equals("h");
+            }
+
             return fc.character.equalsIgnoreCase(textRaw);
         } else {
             String enemy = fc.character;
             switch (enemy) {
                 case "_": return textRaw.equals("_") || textRaw.equals("-");
                 case "^": return textRaw.equals("^") || textRaw.equals("1") || textRaw.equals("A");
+
+                case "(": return textRaw.equals("(") || textRaw.equals("<") || textRaw.equals("[") || textRaw.equals("C") || textRaw.equals("c");
+
+                case ")": return textRaw.equals(")") || textRaw.equals(">") || textRaw.equals("]") || textRaw.equals("J") || textRaw.equals("j");
+
+                case "v": return textRaw.equals("U") || textRaw.equals("v") || textRaw.equals("V");
+
+                // Phòng trường hợp cần dùng lại
                 case "/": return textRaw.equals("/") || textRaw.equals("1") || textRaw.equals("l") || textUpper.equals("I");
-                case "(": return textRaw.equals("(");
-                case ")": return textRaw.equals(")");
-                case "<": return textRaw.equals("<");
-                case ">": return textRaw.equals(">");
+
                 default: return enemy.equals(textUpper);
             }
         }
