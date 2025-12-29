@@ -92,7 +92,6 @@ public class JokerGameLogic {
         String textUpper = recognizedText.toUpperCase();
         // Logic sửa lỗi nhận diện
         if (textUpper.equals("0") || textUpper.equals("X") || textUpper.equals("O")) textUpper = "10";
-        // (Bạn có thể thêm lại logic 9/Q ở đây nếu cần)
 
         List<Card> matchingRankCards = deckManager.findCardsByRank(textUpper);
         if (matchingRankCards.isEmpty()) return false;

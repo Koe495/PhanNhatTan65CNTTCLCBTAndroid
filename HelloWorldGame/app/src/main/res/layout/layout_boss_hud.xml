@@ -8,14 +8,13 @@
 
     <!--
        CONTAINER CHÍNH: Giữ tỷ lệ khung hình 128:64 (2:1)
-       Bạn có thể đổi width thành bao nhiêu tùy thích (ví dụ 300dp),
        height sẽ tự co giãn theo tỷ lệ này.
     -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/healthBarContainer"
         android:layout_width="300dp"
         android:layout_height="0dp"
-        app:layout_constraintDimensionRatio="128:64"
+        app:layout_constraintDimensionRatio="2:1"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -66,10 +65,7 @@
             android:orientation="horizontal"
             app:layout_constraintGuide_percent="0.55" />
 
-        <!-- 3. THANH MÁU ĐỎ -->
-
-        <!-- 4. CHỮ SỐ MÁU-->
-
+        <!-- 3. THANH MÁU -->
         <ProgressBar
             android:id="@+id/pbBossHealth"
             style="?android:attr/progressBarStyleHorizontal"
@@ -85,6 +81,42 @@
             app:layout_constraintTop_toTopOf="@id/guideTop"
             app:layout_constraintVertical_bias="0.0" />
 
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="30dp"
+            android:layout_height="27dp"
+            android:layout_marginStart="53dp"
+            android:layout_marginTop="55dp"
+            android:src="@drawable/suit_heart"
+            app:layout_constraintStart_toStartOf="@+id/ivFrame"
+            app:layout_constraintTop_toTopOf="@+id/ivFrame" />
+
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="27dp"
+            android:layout_marginStart="105dp"
+            android:layout_marginTop="55dp"
+            android:src="@drawable/suit_diamond"
+            app:layout_constraintStart_toStartOf="@+id/ivFrame"
+            app:layout_constraintTop_toTopOf="@+id/ivFrame" />
+
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="27dp"
+            android:layout_marginTop="55dp"
+            android:layout_marginEnd="105dp"
+            android:src="@drawable/suit_club"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/ivFrame" />
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="27dp"
+            android:layout_marginTop="55dp"
+            android:layout_marginEnd="53dp"
+            android:src="@drawable/suit_spade"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/ivFrame" />
+
         <TextView
             android:id="@+id/tvBossHp"
             android:layout_width="wrap_content"
@@ -92,7 +124,7 @@
             android:layout_marginBottom="73dp"
             android:shadowColor="#000000"
             android:shadowRadius="2"
-            android:text="1000/1000"
+            android:text="100000000000/100000000000"
             android:textColor="#FFFFFF"
             android:textSize="12sp"
             android:textStyle="bold"
