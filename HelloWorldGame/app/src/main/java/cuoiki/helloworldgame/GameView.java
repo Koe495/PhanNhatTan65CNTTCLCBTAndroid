@@ -121,7 +121,23 @@ public class GameView extends View {
 
         particlePaint.setStyle(Paint.Style.FILL);
 
-        currentTheme = new GameTheme("Default", Color.WHITE, Color.BLACK, Color.BLUE, 0, R.raw.carefree, R.raw.azali_phase2, R.raw.pop, R.raw.pop2, R.raw.azali_phase2);
+        currentTheme = new GameTheme("Classic", // tên
+                Color.WHITE, // nền trò chơi
+                Color.BLACK, // màu chữ
+                Color.RED, // màu mục tiêu
+                0, // font chữ
+                R.raw.carefree, // nhạc p1
+                R.raw.azali_phase2, // nhạc p2
+                R.raw.pop, // sfx 1
+                R.raw.pop2, // sfx 2
+                R.raw.azali_phase2, // nhạc endless
+                Color.WHITE, // màu nền HS
+                Color.BLACK, // màu hạt
+                Color.BLACK, // màu tiêu đề
+                Color.BLACK, // màu label classic
+                Color.parseColor("#8B0000"), // màu label endless
+                Color.BLACK, // màu điểm classic
+                Color.BLACK); // màu điểm endless
         currentMode = GameMode.CLASSIC;
 
         startGameLoop();
@@ -226,6 +242,10 @@ public class GameView extends View {
             diff = 0;
             gamePhase = 1;
         }
+        if (listener != null) {
+            listener.onScoreUpdate(score);
+            listener.onDiffUpdate(diff);
+        }
     }
 
     @Override
@@ -248,6 +268,10 @@ public class GameView extends View {
                 public void onQTEFail() {
                     score -= 5;
                     if (listener != null) listener.onScoreUpdate(score);
+                    if (score <= 0) {
+                        isGameOver = true;
+                        if (listener != null) listener.onGameOver();
+                    }
                     spawnExplosion(screenWidth/2, screenHeight/2, Color.RED, 50, 20);
                 }
             });
@@ -606,6 +630,10 @@ public class GameView extends View {
                 public void onQTEFail() {
                     score -= 5;
                     if (listener != null) listener.onScoreUpdate(score);
+                    if (score <= 0) {
+                        isGameOver = true;
+                        if (listener != null) listener.onGameOver();
+                    }
                 }
             });
         }
@@ -629,7 +657,10 @@ public class GameView extends View {
             }
         }
 
-        if (listener != null) listener.onScoreUpdate(score);
+        if (listener != null) {
+            listener.onScoreUpdate(score);
+            listener.onDiffUpdate(diff);
+        }
         invalidate();
 
         startGameLoop(); // Đảm bảo loop chạy lại

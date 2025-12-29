@@ -1,0 +1,41 @@
+<resources>
+
+    <!-- GAME OVER / PAUSE TITLE -->
+    <style name="Text.Divine.Title">
+        <item name="android:fontFamily">@font/cinzel_bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.08</item> <!-- 5–10% -->
+        <item name="android:textSize">42sp</item>
+        <item name="android:textColor">@color/ivory_white</item>
+        <item name="android:shadowColor">@color/ashen_black</item>
+        <item name="android:shadowDx">0</item>
+        <item name="android:shadowDy">3</item>
+        <item name="android:shadowRadius">6</item>
+    </style>
+
+    <!-- TITLE RED VARIANT -->
+    <style name="Text.Divine.Title.Red">
+        <item name="android:textColor">@color/divine_red</item>
+    </style>
+    <!-- TITLE RED VARIANT -->
+    <style name="Text.Divine.Title.White">
+        <item name="android:textColor">@color/ivory_white</item>
+    </style>
+
+    <!-- MENU BUTTON TEXT -->
+    <style name="Text.Divine.Button">
+        <item name="android:fontFamily">@font/cinzel_regular</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.06</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">@color/ivory_white</item>
+    </style>
+
+    <!-- HS TEXT -->
+    <style name="Text.Divine.HighScore">
+        <item name="android:fontFamily">@font/egbaramond_variable_wght</item>
+        <item name="android:letterSpacing">0.06</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@color/ivory_white</item>
+    </style>
+</resources>

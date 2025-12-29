@@ -2,4 +2,13 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <!-- Divine Whites -->
+    <color name="ivory_white">#F6F4EE</color>
+
+    <!-- Dark Crimson -->
+    <color name="divine_red">#8B1E1E</color>
+
+    <!-- Supporting -->
+    <color name="ashen_black">#120F0F</color>
+
 </resources>

@@ -2,94 +2,112 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#D9000000"
+    android:background="@drawable/bg_gameover_false_god"
     android:clickable="true"
     android:focusable="true">
-    <!-- background đậm hơn Pause một chút -->
 
     <LinearLayout
-        android:layout_width="320dp"
+        android:layout_width="340dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:background="@drawable/bg_popup_rounded"
         android:orientation="vertical"
-        android:padding="20dp"
-        android:elevation="10dp">
+        android:padding="28dp"
+        android:background="@drawable/bg_judgement_panel"
+        android:elevation="16dp">
 
+        <!-- TITLE -->
         <TextView
             android:id="@+id/tvTitle"
-            android:layout_width="wrap_content"
+            style="@style/Text.Divine.Title"
+            android:layout_width="280dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="GAME OVER"
-            android:textSize="36sp"
-            android:textStyle="bold"
-            android:textColor="#D32F2F"
-            android:layout_marginBottom="10dp"/>
+            android:layout_marginBottom="12dp"
+            android:letterSpacing="0.2"
+            android:text="JUDGEMENT"
+            android:textColor="#FFFFFF"
+            android:textSize="32sp"
+            android:textStyle="bold" />
 
+        <!-- RESULT -->
         <TextView
             android:id="@+id/tvCurrentResult"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="Max Diff: 45"
-            android:textSize="20sp"
-            android:textColor="#333333"
-            android:layout_marginBottom="15dp"/>
+            style="@style/Text.Divine.Title.Red"
+            android:text="Purified · 45"
+            android:textSize="18sp"
+            android:letterSpacing="0.1"
+            android:textColor="#FF3333"
+            android:layout_marginBottom="24dp"/>
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#CCCCCC"
-            android:layout_marginBottom="10dp"/>
+            android:background="#44FFFFFF"
+            android:layout_marginBottom="16dp"/>
 
+        <!-- RECORDS -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="TOP RECORDS"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:textColor="#666666"
-            android:layout_gravity="center"/>
+            style="@style/Text.Divine.HighScore"
+            android:text="ARCHIVED SCRIPTURES"
+            android:textSize="13sp"
+            android:textStyle="italic"
+            android:letterSpacing="0.14"
+            android:textColor="#CCCCCC"
+            android:layout_gravity="center"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"/>
 
-        <!-- Nơi hiển thị danh sách High Score -->
         <TextView
             android:id="@+id/tvHighScoreList"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Loading..."
+            style="@style/Text.Divine.HighScore"
+            android:text="01 · 72\n02 · 61\n03 · 45"
             android:gravity="center"
-            android:textSize="16sp"
-            android:textColor="#000000"
-            android:lines="5"
-            android:layout_marginBottom="20dp"/>
+            android:lineSpacingExtra="6dp"
+            android:textColor="#EEEEEE"
+            android:layout_marginBottom="28dp"/>
 
+        <!-- ACTIONS -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:weightSum="2">
 
-            <Button
+            <TextView
                 android:id="@+id/btnReplay"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="46dp"
                 android:layout_weight="1"
-                android:text="REPLAY"
-                android:backgroundTint="#2196F3"
-                android:textColor="#FFFFFF"
-                android:layout_marginEnd="5dp"/>
+                android:gravity="center"
+                style="@style/Text.Divine.Button"
+                android:textStyle="bold"
+                android:text="DEFY GOD"
+                android:textSize="13sp"
+                android:letterSpacing="0.16"
+                android:textColor="#111111"
+                android:background="@drawable/btn_replay_divine"
+                android:layout_marginEnd="8dp"/>
 
-            <Button
+            <TextView
                 android:id="@+id/btnMenu"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="46dp"
                 android:layout_weight="1"
-                android:text="MENU"
-                android:backgroundTint="#9E9E9E"
-                android:textColor="#FFFFFF"
-                android:layout_marginStart="5dp"/>
+                android:gravity="center"
+                style="@style/Text.Divine.Title.Red"
+                android:text="ACCEPT FATE"
+                android:textSize="12sp"
+                android:letterSpacing="0.14"
+                android:textColor="#FF5555"
+                android:background="@drawable/btn_menu_heresy"
+                android:layout_marginStart="8dp"/>
         </LinearLayout>
-
     </LinearLayout>
 </FrameLayout>

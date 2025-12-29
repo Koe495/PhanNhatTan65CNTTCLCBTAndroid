@@ -2,58 +2,79 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#CC000000"
+    android:background="@drawable/bg_pause_false_god"
     android:clickable="true"
     android:focusable="true">
-    <!-- background #CC000000: Màu đen trong suốt 80% -->
 
     <LinearLayout
-        android:layout_width="300dp"
+        android:layout_width="280dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:background="@drawable/bg_popup_rounded"
         android:orientation="vertical"
-        android:padding="24dp"
-        android:elevation="10dp">
+        android:padding="28dp"
+        android:background="@drawable/bg_ritual_panel"
+        android:elevation="14dp">
 
+        <!-- TITLE -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            style="@style/Text.Divine.Title"
             android:text="PAUSED"
-            android:textSize="32sp"
+            android:textSize="28sp"
             android:textStyle="bold"
-            android:textColor="#333333"
-            android:layout_marginBottom="24dp"/>
+            android:letterSpacing="0.18"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="32dp"/>
 
-        <Button
+        <!-- RESUME -->
+        <TextView
             android:id="@+id/btnResume"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="RESUME"
+            android:layout_height="48dp"
+            android:gravity="center"
+            style="@style/Text.Divine.Button"
             android:textStyle="bold"
-            android:backgroundTint="#4CAF50"
-            android:textColor="#FFFFFF"
-            android:layout_marginBottom="12dp"/>
+            android:text="RESUME RITUAL"
+            android:textSize="13sp"
+            android:letterSpacing="0.14"
+            android:textColor="#111111"
+            android:background="@drawable/btn_resume_divine"
+            android:layout_marginBottom="16dp"/>
 
-        <Button
+        <!-- RESTART -->
+        <TextView
             android:id="@+id/btnRestart"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="RESTART"
-            android:textStyle="bold"
-            android:backgroundTint="#FF9800"
+            android:layout_height="44dp"
+            android:gravity="center"
+            style="@style/Text.Divine.Title.White"
+            android:text="REWRITE FATE"
+            android:textSize="13sp"
+            android:letterSpacing="0.12"
             android:textColor="#FFFFFF"
-            android:layout_marginBottom="12dp"/>
+            android:background="@drawable/btn_restart_blood"
+            android:layout_marginBottom="20dp"/>
 
-        <Button
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#33FFFFFF"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- MENU -->
+        <TextView
             android:id="@+id/btnMenu"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="MAIN MENU"
-            android:textStyle="bold"
-            android:backgroundTint="#F44336"
-            android:textColor="#FFFFFF"/>
-
+            android:layout_height="42dp"
+            android:gravity="center"
+            style="@style/Text.Divine.Button"
+            android:text="ABANDON RITUAL"
+            android:textSize="12sp"
+            android:letterSpacing="0.14"
+            android:textColor="#FF4444"
+            android:background="@drawable/btn_menu_heresy"/>
     </LinearLayout>
+
 </FrameLayout>

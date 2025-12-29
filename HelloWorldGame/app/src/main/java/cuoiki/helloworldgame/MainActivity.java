@@ -14,6 +14,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewPropertyAnimator;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -139,13 +141,14 @@ public class MainActivity extends AppCompatActivity {
         if (isHighScoreVisible) return;
         isHighScoreVisible = true;
 
-        // Lấy theme hiện tại
         GameTheme currentTheme = themes.get(currentThemeIndex);
 
-        // Áp dụng giao diện (Màu nền, Font chữ, Màu chữ)
-        highScoreView.setBackgroundColor(currentTheme.bgColor);
+        // --- ÁP DỤNG CÁC MÀU SẮC RIÊNG CỦA HIGH SCORE ---
 
-        // Cập nhật Font chữ cho bảng điểm
+        // Nền
+        highScoreView.setBackgroundColor(currentTheme.hsBackgroundColor);
+
+        // Font
         Typeface tf = Typeface.DEFAULT;
         if (currentTheme.fontResId != 0) {
             try {
@@ -153,39 +156,36 @@ public class MainActivity extends AppCompatActivity {
             } catch (Exception e) { e.printStackTrace(); }
         }
 
-        TextView tvTitle = highScoreView.findViewById(R.id.tvHighScoreTile);
-        TextView tvLabelClassic = highScoreView.findViewById(R.id.labelClassic); // Label "Classic Mode"
-        TextView tvLabelEndless = highScoreView.findViewById(R.id.labelEndless); // Label "Endless Mode"
-
-        // Áp dụng màu và font
-        int textColor = currentTheme.textColor;
-        int strokeColor = currentTheme.strokeColor; // Dùng màu stroke cho điểm nhấn
+        // Tiêu đề và Nhãn
+        TextView tvTitle = highScoreView.findViewById(R.id.tvHighScoreTile); // Đảm bảo ID đúng trong XML
+        TextView tvLabelClassic = highScoreView.findViewById(R.id.labelClassic);
+        TextView tvLabelEndless = highScoreView.findViewById(R.id.labelEndless);
 
         if (tvTitle != null) {
-            tvTitle.setTextColor(strokeColor);
+            tvTitle.setTextColor(currentTheme.hsTitleColor);
             tvTitle.setTypeface(tf);
         }
         if (tvLabelClassic != null) {
-            tvLabelClassic.setTextColor(textColor);
+            tvLabelClassic.setTextColor(currentTheme.hsLabelClassicColor);
             tvLabelClassic.setTypeface(tf);
         }
         if (tvLabelEndless != null) {
-            tvLabelEndless.setTextColor(textColor);
+            tvLabelEndless.setTextColor(currentTheme.hsLabelEndlessColor);
             tvLabelEndless.setTypeface(tf);
         }
 
-        tvClassicScores.setTextColor(textColor);
+        // Nội dung điểm số
+        tvClassicScores.setTextColor(currentTheme.hsScoreClassicColor);
         tvClassicScores.setTypeface(tf);
 
-        tvEndlessScores.setTextColor(textColor);
+        tvEndlessScores.setTextColor(currentTheme.hsScoreEndlessColor);
         tvEndlessScores.setTypeface(tf);
 
-        // Cập nhật màu cho Particle
+        // Particle
         if (particleView != null) {
-            particleView.setParticleColor(currentTheme.textColor);
+            particleView.setParticleColor(currentTheme.hsParticleColor);
         }
 
-        // Load dữ liệu theo Theme
         loadHighScoreData(currentTheme.name);
 
         int screenHeight = rootContainer.getHeight();
@@ -399,10 +399,12 @@ public class MainActivity extends AppCompatActivity {
         rootContainer.addView(pauseMenuView);
         pauseMenuView.bringToFront();
 
-        // Ánh xạ buttons
-        Button btnResume = pauseMenuView.findViewById(R.id.btnResume);
-        Button btnRestart = pauseMenuView.findViewById(R.id.btnRestart);
-        Button btnMenu = pauseMenuView.findViewById(R.id.btnMenu);
+        TextView btnResume = pauseMenuView.findViewById(R.id.btnResume);
+        TextView btnRestart = pauseMenuView.findViewById(R.id.btnRestart);
+        TextView btnMenu = pauseMenuView.findViewById(R.id.btnMenu);
+
+        // Animation UI
+        // none
 
         // Resume Button
         btnResume.setOnClickListener(new View.OnClickListener() {
@@ -448,8 +450,8 @@ public class MainActivity extends AppCompatActivity {
         TextView tvTitle = gameOverMenuView.findViewById(R.id.tvTitle);
         TextView tvCurrentResult = gameOverMenuView.findViewById(R.id.tvCurrentResult);
         TextView tvHighScoreList = gameOverMenuView.findViewById(R.id.tvHighScoreList);
-        Button btnReplay = gameOverMenuView.findViewById(R.id.btnReplay);
-        Button btnMenu = gameOverMenuView.findViewById(R.id.btnMenu);
+        TextView btnReplay = gameOverMenuView.findViewById(R.id.btnReplay);
+        TextView btnMenu = gameOverMenuView.findViewById(R.id.btnMenu);
 
         if (isWin) {
             tvTitle.setText("YOU WIN!");
@@ -458,7 +460,7 @@ public class MainActivity extends AppCompatActivity {
             tvTitle.setText("GAME OVER");
             tvTitle.setTextColor(Color.RED);
         }
-        tvCurrentResult.setText("Max Difficulty: " + currentMaxDiff);
+        tvCurrentResult.setText("Purified · " + currentMaxDiff);
 
         // Replay Button
         btnReplay.setOnClickListener(new View.OnClickListener() {
@@ -498,9 +500,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initThemes() {
-        themes.add(new GameTheme("Classic", Color.WHITE, Color.BLACK, Color.RED, 0, R.raw.carefree, R.raw.azali_phase2, R.raw.pop, R.raw.pop2, R.raw.azali_phase2));
-        themes.add(new GameTheme("Undertale", Color.BLACK, Color.WHITE, Color.BLUE, R.font.undertale_sans, R.raw.undertale_phase1, R.raw.undertale_phase2, R.raw.pop, R.raw.pop2_undertale, R.raw.undertale_endless));
-        themes.add(new GameTheme("Joker", Color.parseColor("#292929"), Color.parseColor("#B0818E"), Color.RED, R.font.imfellenglish_regular, R.raw.joker_menu_music, R.raw.joker_menu_music, R.raw.pop, R.raw.pop2, R.raw.joker_menu_music));
+        themes.add(new GameTheme(
+                "Classic", // tên
+                Color.WHITE, // nền trò chơi
+                Color.BLACK, // màu chữ
+                Color.RED, // màu mục tiêu
+                0, // font chữ
+                R.raw.carefree, // nhạc p1
+                R.raw.azali_phase2, // nhạc p2
+                R.raw.pop, // sfx 1
+                R.raw.pop2, // sfx 2
+                R.raw.azali_phase2, // nhạc endless
+                Color.WHITE, // màu nền HS
+                Color.BLACK, // màu hạt
+                Color.BLACK, // màu tiêu đề
+                Color.BLACK, // màu label classic
+                Color.parseColor("#8B0000"), // màu label endless
+                Color.BLACK, // màu điểm classic
+                Color.BLACK)); // màu điểm endless
+
+        themes.add(new GameTheme("Undertale", Color.BLACK, Color.WHITE, Color.BLUE, R.font.undertale_sans, R.raw.undertale_phase1, R.raw.undertale_phase2, R.raw.pop, R.raw.pop2_undertale, R.raw.undertale_endless
+        , Color.BLACK, Color.WHITE, Color.WHITE, Color.WHITE, Color.BLUE, Color.WHITE, Color.WHITE));
+        themes.add(new GameTheme("Joker", Color.parseColor("#292929"), Color.parseColor("#B0818E"), Color.RED, R.font.imfellenglish_regular, R.raw.joker_menu_music, R.raw.joker_menu_music, R.raw.pop, R.raw.pop2, R.raw.joker_menu_music
+        , Color.parseColor("#292929"), Color.parseColor("#B0818E"), Color.parseColor("#B0818E"), Color.parseColor("#B0818E"), Color.parseColor("#B0818E"), Color.parseColor("#B0818E"), Color.parseColor("#B0818E")));
     }
 
     private void changeTheme(int direction) {
