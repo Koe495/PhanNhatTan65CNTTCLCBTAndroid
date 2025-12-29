@@ -16,6 +16,8 @@ import android.view.ViewGroup;
 import android.view.ViewPropertyAnimator;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -46,10 +48,16 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvClassicScores, tvEndlessScores;
     private boolean isHighScoreVisible = false;
 
-    // --- BOSS UI ---
-    private View bossHudView; // View chứa thanh máu XML
+    // --- JOKER BOSS UI (XML) ---
+    private View bossHudView;
     private ProgressBar pbBossHealth;
     private TextView tvBossHp;
+
+    // --- JOKER GAMEPLAY UI ---
+    private View jokerGameplayView;
+    private LinearLayout layoutHistoryContainer;
+    private LinearLayout layoutHandContainer;
+    private TextView tvLastComboName;
 
     // --- Game Logic Components ---
     private GameView gameView;
@@ -218,6 +226,111 @@ public class MainActivity extends AppCompatActivity {
         tvEndlessScores.setText(sbEndless.toString());
     }
 
+    // --- JOKER UI LOGIC (MỚI) ---
+
+    private void showJokerGameplayUI() {
+        if (jokerGameplayView == null) {
+            LayoutInflater inflater = LayoutInflater.from(this);
+            // Nạp layout XML chứa các container bài
+            jokerGameplayView = inflater.inflate(R.layout.layout_joker_gameplay, rootContainer, false);
+            rootContainer.addView(jokerGameplayView); // Thêm vào root để đè lên GameView
+
+            // Ánh xạ các thành phần trong XML
+            layoutHistoryContainer = jokerGameplayView.findViewById(R.id.layoutHistoryContainer);
+            layoutHandContainer = jokerGameplayView.findViewById(R.id.layoutHandContainer);
+            tvLastComboName = jokerGameplayView.findViewById(R.id.tvLastComboName);
+        }
+        jokerGameplayView.setVisibility(View.VISIBLE);
+    }
+
+    private void hideJokerGameplayUI() {
+        if (jokerGameplayView != null) {
+            jokerGameplayView.setVisibility(View.GONE);
+        }
+    }
+
+    // Hàm cập nhật bài trên tay
+    private void updateJokerHandUI(List<Card> hand) {
+        if (layoutHandContainer == null) return;
+        layoutHandContainer.removeAllViews(); // Xóa bài cũ
+
+        for (Card c : hand) {
+            ImageView iv = new ImageView(this);
+            if (c.bitmap != null) {
+                iv.setImageBitmap(c.bitmap);
+            } else {
+                iv.setBackgroundColor(Color.WHITE); // Fallback nếu lỗi ảnh
+            }
+
+            // Kích thước bài (convert dp sang px)
+            int width = dpToPx(60); // 60dp
+            int height = dpToPx(84); // 84dp
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(width, height);
+            params.setMargins(dpToPx(4), 0, dpToPx(4), 0); // Khoảng cách giữa các lá bài
+            iv.setLayoutParams(params);
+
+            layoutHandContainer.addView(iv);
+        }
+    }
+
+    // Hàm cập nhật lịch sử combo
+    private void updateJokerHistoryUI(List<Card> history, String lastCombo) {
+        if (layoutHistoryContainer == null) return;
+
+        if (tvLastComboName != null) {
+            tvLastComboName.setText(lastCombo);
+        }
+
+        layoutHistoryContainer.removeAllViews();
+
+        for (int i = 0; i < history.size(); i++) {
+            final int index = i;
+            Card c = history.get(i);
+            ImageView iv = new ImageView(this);
+            if (c.bitmap != null) {
+                iv.setImageBitmap(c.bitmap);
+            }
+
+            int width = dpToPx(40); // Nhỏ hơn bài trên tay
+            int height = dpToPx(56);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(width, height);
+            params.setMargins(0, dpToPx(4), 0, dpToPx(4)); // Xếp dọc, cách nhau 4dp
+            iv.setLayoutParams(params);
+
+            // --- XỬ LÝ CLICK VÀO BÀI LỊCH SỬ ĐỂ XÓA ---
+            iv.setOnClickListener(v -> {
+                if (gameView != null && gameView.getJokerLogic() != null) {
+                    gameView.getJokerLogic().removeCardFromHistory(index);
+                    // Sound effect nhỏ khi xóa bài (optional)
+                    // soundManager.playClick();
+                }
+            });
+
+            layoutHistoryContainer.addView(iv);
+        }
+    }
+
+    // Hàm tiện ích đổi dp sang px
+    private int dpToPx(int dp) {
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, getResources().getDisplayMetrics());
+    }
+
+    // Hàm gắn kết nối giữa Logic và UI
+    private void attachJokerListener() {
+        if (gameView != null && gameView.getJokerLogic() != null) {
+            gameView.getJokerLogic().setUIListener(new JokerGameLogic.JokerUIListener() {
+                @Override
+                public void onHandUpdate(List<Card> hand) {
+                    runOnUiThread(() -> updateJokerHandUI(hand));
+                }
+
+                @Override
+                public void onHistoryUpdate(List<Card> history, String lastCombo) {
+                    runOnUiThread(() -> updateJokerHistoryUI(history, lastCombo));
+                }
+            });
+        }
+    }
 // --- XML BOSS HUD ---
     private void showBossHud(int maxHp) {
         if (bossHudView != null) return;
@@ -258,6 +371,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void returnToMenu() {
         hideBossHud();
+        hideJokerGameplayUI();
         if (pauseMenuView != null) rootContainer.removeView(pauseMenuView);
         if (gameOverMenuView != null) rootContainer.removeView(gameOverMenuView);
         pauseMenuView = null;
@@ -378,12 +492,15 @@ public class MainActivity extends AppCompatActivity {
         } else {
             soundManager.playBackground(theme.musicResId);
         }
+        if (theme.name.equals("Joker")) {
+            attachJokerListener();
+        }
     }
 
     private void initThemes() {
         themes.add(new GameTheme("Classic", Color.WHITE, Color.BLACK, Color.RED, 0, R.raw.carefree, R.raw.azali_phase2, R.raw.pop, R.raw.pop2, R.raw.azali_phase2));
         themes.add(new GameTheme("Undertale", Color.BLACK, Color.WHITE, Color.BLUE, R.font.undertale_sans, R.raw.undertale_phase1, R.raw.undertale_phase2, R.raw.pop, R.raw.pop2_undertale, R.raw.undertale_endless));
-        themes.add(new GameTheme("Joker", Color.WHITE, Color.BLACK, Color.RED, R.font.imfellenglish_regular, R.raw.joker_menu_music, R.raw.joker_menu_music, R.raw.pop, R.raw.pop2, R.raw.joker_menu_music));
+        themes.add(new GameTheme("Joker", Color.parseColor("#292929"), Color.parseColor("#B0818E"), Color.RED, R.font.imfellenglish_regular, R.raw.joker_menu_music, R.raw.joker_menu_music, R.raw.pop, R.raw.pop2, R.raw.joker_menu_music));
     }
 
     private void changeTheme(int direction) {
@@ -537,6 +654,15 @@ public class MainActivity extends AppCompatActivity {
         gameView.setSoundManager(soundManager);
         gameContainer.addView(gameView);
 
+        // --- CẤU HÌNH GIAO DIỆN JOKER ---
+        if (selectedTheme.name.equals("Joker")) {
+            showJokerGameplayUI(); // Hiện khung bài XML
+            attachJokerListener(); // Gắn kết nối dữ liệu
+        } else {
+            hideJokerGameplayUI();
+        }
+
+        // --- CẤU HÌNH GAME CƠ BẢN ---
         if (currentGameMode == GameMode.ENDLESS) {
             soundManager.playBackground(selectedTheme.musicEndlessId);
         } else {

@@ -2,13 +2,13 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@android:id/background">
         <shape>
-            <solid android:color="#40000000"/> <!-- Màu nền khi tụt máu (đen mờ) -->
+            <solid android:color="#3A1F1E"/> <!-- Màu nền HP -->
         </shape>
     </item>
     <item android:id="@android:id/progress">
         <clip>
             <shape>
-                <solid android:color="#FF0000"/> <!-- Màu đỏ tươi -->
+                <solid android:color="#386F66"/> <!-- Màu HP boss -->
             </shape>
         </clip>
     </item>

@@ -486,14 +486,6 @@ public class GameView extends View {
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                // tương tác với lịch sử bài trong JOKER mode
-                if (isJokerMode && jokerLogic != null) {
-                    boolean handled = jokerLogic.handleTouch(x, y);
-                    if (handled) {
-                        invalidate(); // Vẽ lại màn hình để cập nhật danh sách
-                        return true;
-                    }
-                }
                 // Hủy lệnh xóa cũ ngay khi đặt tay xuống vẽ tiếp
                 uiHandler.removeCallbacks(clearPathRunnable);
 
@@ -723,5 +715,8 @@ public class GameView extends View {
         uiHandler.removeCallbacksAndMessages(null);
         isGameOver = true;
         isPaused = true;
+    }
+    public JokerGameLogic getJokerLogic() {
+        return jokerLogic;
     }
 }
