@@ -13,7 +13,6 @@ import android.os.Looper;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Toast;
 
 import androidx.core.content.res.ResourcesCompat;
 
@@ -187,7 +186,8 @@ public class GameView extends View {
         isJokerMode = theme.name.equals("Joker");
 
         if (isJokerMode) {
-            jokerLogic = new JokerGameLogic(getContext());
+            // TRUYỀN MODE VÀO CONSTRUCTOR
+            jokerLogic = new JokerGameLogic(getContext(), currentMode);
 
             if (jokerLogic.getBoss() != null) {
                 jokerLogic.getBoss().setListener(new JokerBoss.BossListener() {
@@ -198,7 +198,6 @@ public class GameView extends View {
                         }
                     }
                 });
-
                 if (listener != null) {
                     listener.onBossHpUpdate(jokerLogic.getBoss().hp, jokerLogic.getBoss().maxHp);
                 }
@@ -320,31 +319,42 @@ public class GameView extends View {
         if (isJokerMode) {
             int damage = jokerLogic.update(screenHeight);
 
-            // Kiểm tra thắng Boss
+            // KIỂM TRA BOSS CHẾT
             if (jokerLogic.getBoss() != null && jokerLogic.getBoss().hp <= 0) {
-                if (!isVictory) {
-                    isVictory = true;
-                    isGameOver = true;
-                    if (listener != null) listener.onGameWin();
+
+                if (currentMode == GameMode.ENDLESS) {
+                    // --- LOGIC ENDLESS MỚI ---
+
+                    // 1. Tính HP mới (gấp 1.2 lần)
+                    int oldMax = jokerLogic.getBoss().maxHp;
+                    int newMax = (int)(oldMax * 1.2f);
+
+                    // 2. Hồi sinh Boss
+                    jokerLogic.getBoss().revive(newMax);
+
+                    // 3. Tăng HP cho người chơi (+1)
+                    score++;
+                    if (listener != null) listener.onScoreUpdate(score);
+
+                    // 4. Hiệu ứng (Nổ + Thông báo)
+                    spawnExplosion(screenWidth/2, 200, Color.YELLOW, 20, 20);
+
+                    // 5. Play Sound heal (nếu có)
+                    if (soundManager != null) soundManager.playHeal();
+
+                } else {
+                    // --- LOGIC CLASSIC CŨ ---
+                    if (!isVictory) {
+                        isVictory = true;
+                        isGameOver = true;
+                        if (listener != null) listener.onGameWin();
+                    }
+                    return;
                 }
-                return;
             }
 
-            // Xử lý damage từ boss
-            if (damage > 0) {
-                score -= damage;
-                if (listener != null) listener.onScoreUpdate(score);
-                if (score <= 0) {
-                    isGameOver = true;
-                    if (listener != null) listener.onGameOver();
-                }
-            }
-
-            // Spawn quái Joker
-            if (System.currentTimeMillis() - lastSpawnTime > JOKER_SPAWN_DELAY) {
-                jokerLogic.trySpawnEnemy(screenWidth);
-                lastSpawnTime = System.currentTimeMillis();
-            }
+            if (damage > 0) { score -= damage; if (listener != null) listener.onScoreUpdate(score); if (score <= 0) { isGameOver = true; if (listener != null) listener.onGameOver(); } }
+            if (System.currentTimeMillis() - lastSpawnTime > JOKER_SPAWN_DELAY) { jokerLogic.trySpawnEnemy(screenWidth); lastSpawnTime = System.currentTimeMillis(); }
         }
         else {
             // Logic Classic/Endless
@@ -476,6 +486,14 @@ public class GameView extends View {
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                // tương tác với lịch sử bài trong JOKER mode
+                if (isJokerMode && jokerLogic != null) {
+                    boolean handled = jokerLogic.handleTouch(x, y);
+                    if (handled) {
+                        invalidate(); // Vẽ lại màn hình để cập nhật danh sách
+                        return true;
+                    }
+                }
                 // Hủy lệnh xóa cũ ngay khi đặt tay xuống vẽ tiếp
                 uiHandler.removeCallbacks(clearPathRunnable);
 
@@ -557,7 +575,6 @@ public class GameView extends View {
                 }
             }
         }
-
         // Nếu trúng, xóa nét vẽ
         if (anyHit) {
             resetPathInstantly();
@@ -602,7 +619,7 @@ public class GameView extends View {
         }
 
         if (isJokerMode && jokerLogic != null) {
-            jokerLogic = new JokerGameLogic(getContext());
+            jokerLogic = new JokerGameLogic(getContext(), currentMode);
 
             if (jokerLogic.getBoss() != null) {
                 jokerLogic.getBoss().setListener(new JokerBoss.BossListener() {
@@ -674,8 +691,7 @@ public class GameView extends View {
                 if (soundManager != null) soundManager.playHeal();
                 score++;
                 if (listener != null) listener.onScoreUpdate(score);
-                Toast.makeText(getContext(), "+1 HP", Toast.LENGTH_SHORT).show();
-            }
+                }
             return;
         }
 
@@ -683,7 +699,6 @@ public class GameView extends View {
             gamePhase = 2;
             diff = PHASE_SKIP_DIFF;
             if (listener != null) listener.onPhase2Start();
-            Toast.makeText(getContext(), "YOU WANT HELL?", Toast.LENGTH_SHORT).show();
         }
 
         if (collectedIndex >= TARGET_FULL.length()) {

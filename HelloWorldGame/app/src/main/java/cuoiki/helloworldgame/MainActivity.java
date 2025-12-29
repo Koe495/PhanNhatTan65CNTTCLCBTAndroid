@@ -18,7 +18,6 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -394,7 +393,6 @@ public class MainActivity extends AppCompatActivity {
         if (currentThemeIndex < 0) currentThemeIndex = themes.size() - 1;
         soundManager.playThemeChange();
         applyThemeToMenu();
-        Toast.makeText(this, "Theme: " + themes.get(currentThemeIndex).name, Toast.LENGTH_SHORT).show();
     }
 
     private void toggleGameMode() {
@@ -404,7 +402,6 @@ public class MainActivity extends AppCompatActivity {
         soundManager.playGameModeChange();
         applyThemeToMenu();
         String modeText = (currentGameMode == GameMode.ENDLESS) ? "ENDLESS MODE (Survival)" : "STORY MODE";
-        Toast.makeText(this, modeText, Toast.LENGTH_SHORT).show();
     }
 
     private void applyThemeToMenu() {

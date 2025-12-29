@@ -31,22 +31,31 @@ public class JokerGameLogic {
     private Bitmap bmpHeart, bmpDiamond, bmpClub, bmpSpade;
     private int iconSize = 100;
 
-    public JokerGameLogic(Context context) {
+    // Thông số đối tượng
+    private int MAX_PLAYER_CARDS = 6;
+    private int MIN_PLAYER_CARDS = 4;
+    private int CARDS_DRAWN_PER_TURN = 2;
+    private int MAX_PLAYED_CARDS_HISTORY = 5;
+
+    public JokerGameLogic(Context context, GameMode mode) {
         this.context = context;
         deckManager = new JokerDeckManager(context);
         deckManager.drawCards(5);
 
-        // textPaint.setColor(Color.WHITE); // Bỏ
-        // textPaint.setTextSize(60); // Bỏ
-        // textPaint.setTypeface(Typeface.DEFAULT_BOLD);
+        initSuitIcons();
 
-        initSuitIcons(); // Gọi hàm tải ảnh
-        // Trong Constructor của JokerGameLogic
+        // Thiết lập máu Boss tùy theo chế độ
+        int initialBossHp;
+        if (mode == GameMode.ENDLESS) {
+            initialBossHp = 200; // Endless bắt đầu nhẹ nhàng hơn
+        } else {
+            initialBossHp = 500; // Classic giữ nguyên độ khó
+        }
+
         boss = new JokerBoss(
                 context,
-                10,
+                initialBossHp,
                 R.drawable.joker_boss_1);
-
     }
 
     // --- Tải và resize ảnh chất bài ---
@@ -85,7 +94,7 @@ public class JokerGameLogic {
     public void trySpawnEnemy(int screenWidth) {
         List<Card> hand = deckManager.getHand();
         if (hand.isEmpty()) {
-            deckManager.drawCards(5);
+            deckManager.drawCards(MAX_PLAYER_CARDS);
             return;
         }
 
@@ -197,33 +206,9 @@ public class JokerGameLogic {
         String textRaw = recognizedText;
         String textUpper = recognizedText.toUpperCase();
 
-        // --------------------------------------------------------
-
-        if (textUpper.equals("9") || textUpper.equals("Q")) {
-            boolean has9 = !deckManager.findCardsByRank("9").isEmpty();
-            boolean hasQ = !deckManager.findCardsByRank("Q").isEmpty();
-
-            if (has9 && hasQ) {
-                // TRƯỜNG HỢP 1: Có cả 9 và Q
-                // vẽ q hoặc 9 thì ưu tiên 9
-                textUpper = "9";
-            }
-            else if (!has9 && hasQ) {
-                // TRƯỜNG HỢP 2: Không có 9, chỉ có Q
-                // vẽ 9 ưu tiên Q (biến 9 thành Q)
-                textUpper = "Q";
-            }
-            else if (has9 && !hasQ) {
-                // TRƯỜNG HỢP 3: Không có Q, chỉ có 9
-                // vẽ q ưu tiên 9 (biến Q thành 9)
-                textUpper = "9";
-            }
-        }
         if (textUpper.equals("0") || textUpper.equals("X") || textUpper.equals("O")) {
             textUpper = "10";
         }
-
-        // --------------------------------------------------------
 
         // 1. Tìm các lá bài trùng Rank
         List<Card> matchingRankCards = deckManager.findCardsByRank(textUpper);
@@ -251,7 +236,9 @@ public class JokerGameLogic {
 
             if (cardUsed) {
                 deckManager.removeCardFromHand(card);
-
+                if (playedCardsHistory.size() >= MAX_PLAYED_CARDS_HISTORY) {
+                    playedCardsHistory.remove(0);
+                }
                 // 1. Thêm vào danh sách lịch sử để xét bộ
                 playedCardsHistory.add(card);
 
@@ -277,11 +264,38 @@ public class JokerGameLogic {
 
         }
 
-        if (deckManager.getHand().size() < 5) {
-            deckManager.drawCards(1);
+        if (deckManager.getHand().size() < MIN_PLAYER_CARDS) {
+            deckManager.drawCards(CARDS_DRAWN_PER_TURN);
         }
 
         return hitAny;
+    }
+
+//     Xử lý khi người chơi nhấn vào màn hình.
+//     *Kiểm tra xem tọa độ nhấn có trùng với lá bài nào trong lịch sử không.
+
+    public boolean handleTouch(float touchX, float touchY) {
+        // Tọa độ phải khớp với logic vẽ trong hàm draw()
+        int historyX = 20;
+        int historyY = 200;
+        int historyCardW = 80;
+        int historyCardH = 110;
+
+        for (int i = 0; i < playedCardsHistory.size(); i++) {
+            // Tính toán Rect (vùng va chạm) của từng lá bài lịch sử
+            int top = historyY + (i * (historyCardH + 10));
+            int bottom = top + historyCardH;
+            int left = historyX;
+            int right = left + historyCardW;
+
+            // Nếu tọa độ nhấn nằm trong Rect của lá bài
+            if (touchX >= left && touchX <= right && touchY >= top && touchY <= bottom) {
+                playedCardsHistory.remove(i);
+                lastComboName = "Card Removed"; // Thông báo nhỏ
+                return true;
+            }
+        }
+        return false;
     }
 
     public JokerBoss getBoss() {

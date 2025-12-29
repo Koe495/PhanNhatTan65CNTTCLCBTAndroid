@@ -43,11 +43,19 @@ public class JokerBoss {
             listener.onHpChanged(this.hp, this.maxHp);
         }
     }
+    public void revive(int newMaxHp) {
+        this.maxHp = newMaxHp;
+        this.hp = newMaxHp; // Hồi đầy máu
 
+        if (listener != null) {
+            listener.onHpChanged(this.hp, this.maxHp);
+        }
+    }
     public void draw(Canvas canvas, int screenWidth, int screenHeight) {
         if (bossBitmap != null) {
             Rect dstBoss = new Rect(0, 0, screenWidth, screenHeight);
             canvas.drawBitmap(bossBitmap, null, dstBoss, paint);
         }
     }
+
 }
