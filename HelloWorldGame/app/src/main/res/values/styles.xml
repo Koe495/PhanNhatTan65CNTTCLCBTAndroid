@@ -1,4 +1,12 @@
 <resources>
+    <style name="Text">
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+    <!-- STYLE GỐC -->
+    <style name="Text.Divine">
+        <item name="android:textColor">@color/ivory_white</item>
+        <item name="android:fontFamily">@font/cinzel_regular</item>
+    </style>
 
     <!-- GAME OVER / PAUSE TITLE -->
     <style name="Text.Divine.Title">
