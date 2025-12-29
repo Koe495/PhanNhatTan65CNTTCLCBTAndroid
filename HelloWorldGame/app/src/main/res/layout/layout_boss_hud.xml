@@ -87,7 +87,7 @@
             android:layout_height="27dp"
             android:layout_marginStart="53dp"
             android:layout_marginTop="55dp"
-            android:src="@drawable/suit_heart"
+            android:src="@drawable/suit_heart_copy"
             app:layout_constraintStart_toStartOf="@+id/ivFrame"
             app:layout_constraintTop_toTopOf="@+id/ivFrame" />
 
@@ -96,7 +96,7 @@
             android:layout_height="27dp"
             android:layout_marginStart="105dp"
             android:layout_marginTop="55dp"
-            android:src="@drawable/suit_diamond"
+            android:src="@drawable/suit_diamond_copy"
             app:layout_constraintStart_toStartOf="@+id/ivFrame"
             app:layout_constraintTop_toTopOf="@+id/ivFrame" />
 

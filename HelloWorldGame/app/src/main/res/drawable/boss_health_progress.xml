@@ -8,7 +8,7 @@
     <item android:id="@android:id/progress">
         <clip>
             <shape>
-                <solid android:color="#386F66"/> <!-- Màu HP boss -->
+                <solid android:color="#294C48"/> <!-- Màu HP boss -->
             </shape>
         </clip>
     </item>
