@@ -11,4 +11,6 @@
     <!-- Supporting -->
     <color name="ashen_black">#120F0F</color>
 
+    <color name="joker_primary">#B0818E</color>
+    <color name="dark">#292929</color>
 </resources>

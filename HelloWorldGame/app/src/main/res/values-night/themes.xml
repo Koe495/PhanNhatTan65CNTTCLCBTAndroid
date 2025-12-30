@@ -3,5 +3,16 @@
     <style name="Base.Theme.HelloWorldGame" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your dark theme here. -->
         <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+
+        <!-- 1. Đổi màu thanh trạng thái (Status Bar - Viền trên) -->
+        <item name="android:statusBarColor">@color/ivory_white</item>
+
+        <!-- 2. Đổi màu chữ trên thanh trạng thái (true = chữ đen, false = chữ trắng) -->
+        <item name="android:windowLightStatusBar">true</item>
+
+        <!-- 3. Đổi màu thanh điều hướng (Navigation Bar - Viền dưới) -->
+        <item name="android:navigationBarColor">@color/ashen_black</item>
     </style>
+
+    <style name="Theme.HelloWorldGame" parent="Base.Theme.HelloWorldGame" />
 </resources>
