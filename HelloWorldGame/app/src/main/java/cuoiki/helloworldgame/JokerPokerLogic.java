@@ -61,14 +61,14 @@ public class JokerPokerLogic {
         }
 
         // Xét ưu tiên từ cao xuống thấp
-        if (isFlush && isStraight) return new HandResult("Straight Flush", 15, true);
-        if (fours > 0) return new HandResult("Four of a Kind", 10, true);
-        if (threes > 0 && pairs > 0) return new HandResult("Full House", 8, true);
-        if (isFlush) return new HandResult("Flush", 7, true);
-        if (isStraight) return new HandResult("Straight", 5, true);
-        if (threes > 0) return new HandResult("Three of a Kind", 3, true);
-        if (pairs >= 2) return new HandResult("Two Pair", 2, true);
-        if (pairs == 1) return new HandResult("Pair", 1, true);
+        if (isFlush && isStraight) return new HandResult("Straight Flush", 25, true);
+        if (fours > 0) return new HandResult("Four of a Kind", 16, true);
+        if (threes > 0 && pairs > 0) return new HandResult("Full House", 14, true);
+        if (isFlush) return new HandResult("Flush", 12, true);
+        if (isStraight) return new HandResult("Straight", 10, true);
+        if (threes > 0) return new HandResult("Three of a Kind", 6, true);
+        if (pairs >= 2) return new HandResult("Two Pair", 4, true);
+        if (pairs == 1) return new HandResult("Pair", 2, true);
 
         return new HandResult("None", 0, false);
     }

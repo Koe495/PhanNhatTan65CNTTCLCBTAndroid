@@ -12,12 +12,15 @@ public class JokerDeckManager {
     private List<Card> discardPile = new ArrayList<>();
     private List<Card> playerHand = new ArrayList<>();
     private Context context;
+    private SoundManager soundManager;
 
     public JokerDeckManager(Context context) {
         this.context = context;
         initDeck();
     }
-
+    public void setSoundManager(SoundManager sm) {
+        this.soundManager = sm;
+    }
     private void initDeck() {
         deck.clear();
 
@@ -34,7 +37,7 @@ public class JokerDeckManager {
 
         String[] ranks = {"a", "2", "3", "4", "5", "6", "7", "8", "9", "10", "j", "q", "k"};
 
-        Card.Suit[] suits = {Card.Suit.HEART, Card.Suit.SPADE, Card.Suit.CLUB, Card.Suit.DIAMOND};
+        Suit[] suits = {Suit.HEART, Suit.SPADE, Suit.CLUB, Suit.DIAMOND};
 
         // Vòng lặp cắt ảnh
         for (int row = 0; row < rows; row++) {
@@ -71,6 +74,9 @@ public class JokerDeckManager {
             }
             Card card = deck.remove(0);
             playerHand.add(card);
+        }
+        if (soundManager != null) {
+            soundManager.playCardDraw();
         }
     }
 

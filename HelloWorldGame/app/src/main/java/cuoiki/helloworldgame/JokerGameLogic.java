@@ -19,9 +19,10 @@ public class JokerGameLogic {
     private List<Card> playedCardsHistory = new ArrayList<>();
     private String lastComboName = "";
     private ArrayList<FallingChar> fallingSuits = new ArrayList<>();
-
     private Context context;
     private Random random = new Random();
+    private SoundManager soundManager;
+    private JokerUIListener uiListener;
 
     // Tài nguyên vẽ
     private Bitmap bmpHeart, bmpDiamond, bmpClub, bmpSpade;
@@ -38,14 +39,18 @@ public class JokerGameLogic {
         void onHandUpdate(List<Card> hand);
         void onHistoryUpdate(List<Card> history, String lastCombo);
     }
-    private JokerUIListener uiListener;
 
     public void setUIListener(JokerUIListener listener) {
         this.uiListener = listener;
         // Cập nhật ngay lần đầu
         notifyUI();
     }
-
+    public void setSoundManager(SoundManager sm) {
+        this.soundManager = sm;
+        if (deckManager != null) {
+            deckManager.setSoundManager(sm);
+        }
+    }
     public JokerGameLogic(Context context, GameMode mode) {
         this.context = context;
         deckManager = new JokerDeckManager(context);
@@ -117,6 +122,7 @@ public class JokerGameLogic {
             if (cardUsed) {
                 deckManager.removeCardFromHand(card);
 
+                // Quản lý size lịch sử
                 if (playedCardsHistory.size() >= MAX_PLAYED_CARDS_HISTORY) {
                     playedCardsHistory.remove(0);
                 }
@@ -125,10 +131,27 @@ public class JokerGameLogic {
                 if (boss != null) boss.takeDamage(1);
 
                 JokerPokerLogic.HandResult result = JokerPokerLogic.checkHand(playedCardsHistory);
+
                 if (result.isSpecial) {
-                    if (boss != null) boss.takeDamage(result.bonusDamage);
-                    lastComboName = result.name + " (+" + result.bonusDamage + " DMG)";
-                    playedCardsHistory.clear();
+                    boolean triggerCombo = true;
+
+                    // --- LOGIC HOLD HAND---
+                    // Nếu là Pair hoặc Three of a Kind VÀ lịch sử chưa đầy -> HOLD
+                    if (result.name.contains("Pair") || result.name.contains("Three")) {
+                        if (playedCardsHistory.size() < MAX_PLAYED_CARDS_HISTORY) {
+                            triggerCombo = false;
+                            lastComboName = "Holding: " + result.name + "...";
+                        }
+                    }
+
+                    if (triggerCombo) {
+                        if (boss != null) boss.takeDamage(result.bonusDamage);
+                        if (soundManager != null) soundManager.playCardCombo();
+                        lastComboName = result.name + " (+" + result.bonusDamage + " DMG)";
+                        playedCardsHistory.clear();
+                    }
+                } else {
+                    lastComboName = "";
                 }
 
                 hitAny = true;
@@ -150,8 +173,20 @@ public class JokerGameLogic {
     public void removeCardFromHistory(int index) {
         if (index >= 0 && index < playedCardsHistory.size()) {
             playedCardsHistory.remove(index);
-            lastComboName = "Card Removed";
-            notifyUI(); // Cập nhật lại danh sách
+            if (soundManager != null) soundManager.playCardRemove();
+
+            // Cập nhật lại trạng thái text sau khi xóa
+            JokerPokerLogic.HandResult result = JokerPokerLogic.checkHand(playedCardsHistory);
+            if (result.isSpecial && playedCardsHistory.size() < MAX_PLAYED_CARDS_HISTORY
+                    && (result.name.contains("Pair") || result.name.contains("Three"))) {
+                lastComboName = "Holding: " + result.name + "...";
+            } else if (result.isSpecial) {
+                lastComboName = "Ready: " + result.name;
+            } else {
+                lastComboName = "Card Removed";
+            }
+
+            notifyUI();
         }
     }
 

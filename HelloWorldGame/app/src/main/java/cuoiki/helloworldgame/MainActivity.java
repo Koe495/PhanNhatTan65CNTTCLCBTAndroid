@@ -194,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
         particleView.startAnimation();
         tvHelloWorld.animate().translationY(-screenHeight).setDuration(500).start();
         highScoreView.animate().translationY(0).setDuration(500).start();
-        soundManager.playClick();
+        soundManager.playPagesFlip();
     }
 
     private void hideHighScoreScreen() {
@@ -210,6 +210,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 })
                 .start();
+        soundManager.playBookClose();
     }
 
     private void loadHighScoreData(String themeName) {
@@ -298,11 +299,12 @@ public class MainActivity extends AppCompatActivity {
             iv.setLayoutParams(params);
 
             // --- XỬ LÝ CLICK VÀO BÀI LỊCH SỬ ĐỂ XÓA ---
-            iv.setOnClickListener(v -> {
-                if (gameView != null && gameView.getJokerLogic() != null) {
-                    gameView.getJokerLogic().removeCardFromHistory(index);
-                    // Sound effect nhỏ khi xóa bài (optional)
-                    // soundManager.playClick();
+            iv.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (gameView != null && gameView.getJokerLogic() != null) {
+                        gameView.getJokerLogic().removeCardFromHistory(index);
+                    }
                 }
             });
 
@@ -320,13 +322,23 @@ public class MainActivity extends AppCompatActivity {
         if (gameView != null && gameView.getJokerLogic() != null) {
             gameView.getJokerLogic().setUIListener(new JokerGameLogic.JokerUIListener() {
                 @Override
-                public void onHandUpdate(List<Card> hand) {
-                    runOnUiThread(() -> updateJokerHandUI(hand));
+                public void onHandUpdate(final List<Card> hand) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateJokerHandUI(hand);
+                        }
+                    });
                 }
 
                 @Override
-                public void onHistoryUpdate(List<Card> history, String lastCombo) {
-                    runOnUiThread(() -> updateJokerHistoryUI(history, lastCombo));
+                public void onHistoryUpdate(final List<Card> history, final String lastCombo) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateJokerHistoryUI(history, lastCombo);
+                        }
+                    });
                 }
             });
         }
@@ -495,7 +507,13 @@ public class MainActivity extends AppCompatActivity {
             soundManager.playBackground(theme.musicResId);
         }
         if (theme.name.equals("Joker")) {
+            soundManager.loadJokerSounds();
+
             attachJokerListener();
+
+            if (gameView.getJokerLogic() != null) {
+                gameView.getJokerLogic().setSoundManager(soundManager);
+            }
         }
     }
 
@@ -513,14 +531,14 @@ public class MainActivity extends AppCompatActivity {
                 R.raw.azali_phase2, // nhạc endless
                 Color.WHITE, // màu nền HS
                 Color.BLACK, // màu hạt
-                Color.BLACK, // màu tiêu đề
+                Color.parseColor("#8B0000"), // màu tiêu đề
                 Color.BLACK, // màu label classic
                 Color.parseColor("#8B0000"), // màu label endless
                 Color.BLACK, // màu điểm classic
                 Color.BLACK)); // màu điểm endless
 
-        themes.add(new GameTheme("Undertale", Color.BLACK, Color.WHITE, Color.BLUE, R.font.undertale_sans, R.raw.undertale_phase1, R.raw.undertale_phase2, R.raw.pop, R.raw.pop2_undertale, R.raw.undertale_endless
-        , Color.BLACK, Color.WHITE, Color.WHITE, Color.WHITE, Color.BLUE, Color.WHITE, Color.WHITE));
+        themes.add(new GameTheme("Undertale", Color.BLACK, Color.WHITE, Color.parseColor("#3f82f4"), R.font.undertale_sans, R.raw.undertale_phase1, R.raw.undertale_phase2, R.raw.pop, R.raw.pop2_undertale, R.raw.undertale_endless
+        , Color.BLACK, Color.parseColor("#3f82f4"), Color.parseColor("#3f82f4"), Color.WHITE, Color.parseColor("#3f82f4"), Color.WHITE, Color.WHITE));
         themes.add(new GameTheme("Joker", Color.parseColor("#292929"), Color.parseColor("#B0818E"), Color.RED, R.font.imfellenglish_regular, R.raw.joker_menu_music, R.raw.joker_menu_music, R.raw.pop, R.raw.pop2, R.raw.joker_menu_music
         , Color.parseColor("#292929"), Color.parseColor("#B0818E"), Color.parseColor("#B0818E"), Color.parseColor("#B0818E"), Color.parseColor("#B0818E"), Color.parseColor("#B0818E"), Color.parseColor("#B0818E")));
     }
@@ -678,8 +696,13 @@ public class MainActivity extends AppCompatActivity {
 
         // --- CẤU HÌNH GIAO DIỆN JOKER ---
         if (selectedTheme.name.equals("Joker")) {
+            soundManager.loadJokerSounds();
             showJokerGameplayUI(); // Hiện khung bài XML
             attachJokerListener(); // Gắn kết nối dữ liệu
+
+            if (gameView.getJokerLogic() != null) {
+                gameView.getJokerLogic().setSoundManager(soundManager);
+            }
         } else {
             hideJokerGameplayUI();
         }
@@ -769,15 +792,20 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onBossHpUpdate(int currentHp, int maxHp) {
-                runOnUiThread(() -> {
-                    // Nếu maxHp > 0, tức là có Boss -> Hiện HUD
-                    if (maxHp > 0) {
-                        if (bossHudView == null) showBossHud(maxHp); // Hiện nếu chưa có
-                        updateBossHud(currentHp, maxHp); // Cập nhật
-                    } else {
-                        // Nếu maxHp = 0 -> Không có Boss -> Ẩn HUD
-                        hideBossHud();
+            public void onBossHpUpdate(final int currentHp, final int maxHp) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // Nếu maxHp > 0, tức là có Boss -> Hiện HUD
+                        if (maxHp > 0) {
+                            if (bossHudView == null) {
+                                showBossHud(maxHp); // Hiện nếu chưa có
+                            }
+                            updateBossHud(currentHp, maxHp); // Cập nhật
+                        } else {
+                            // Nếu maxHp = 0 -> Không có Boss -> Ẩn HUD
+                            hideBossHud();
+                        }
                     }
                 });
             }
@@ -828,7 +856,17 @@ public class MainActivity extends AppCompatActivity {
 
         charView.bringToFront();
         charView.setElevation(1000f);
-        charView.animate().translationY(-rootContainer.getHeight()).rotation(random.nextInt(360)).setDuration(500 + random.nextInt(500)).withEndAction(() -> rootContainer.removeView(charView)).start();
+        charView.animate()
+                .translationY(-rootContainer.getHeight())
+                .rotation(random.nextInt(360))
+                .setDuration(500 + random.nextInt(500))
+                .withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        rootContainer.removeView(charView);
+                    }
+                })
+                .start();
     }
 
     @Override

@@ -8,6 +8,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.mlkit.common.MlKitException;
 import com.google.mlkit.common.model.DownloadConditions;
 import com.google.mlkit.common.model.RemoteModelManager;
+import com.google.mlkit.vision.digitalink.common.RecognitionResult;
 import com.google.mlkit.vision.digitalink.recognition.DigitalInkRecognition;
 import com.google.mlkit.vision.digitalink.recognition.DigitalInkRecognitionModel;
 import com.google.mlkit.vision.digitalink.recognition.DigitalInkRecognitionModelIdentifier;
@@ -92,17 +93,23 @@ public class RecognitionManager {
         }
 
         recognizer.recognize(ink)
-                .addOnSuccessListener(result -> {
-                    if (!result.getCandidates().isEmpty()) {
-                        String text = result.getCandidates().get(0).getText();
-                        Log.d(TAG, "Kết quả nhận diện: " + text);
-                        listener.onResult(text);
-                    } else {
-                        Log.d(TAG, "Không nhận diện được ký tự nào.");
+                .addOnSuccessListener(new OnSuccessListener<RecognitionResult>() {
+                    @Override
+                    public void onSuccess(RecognitionResult result) {
+                        if (!result.getCandidates().isEmpty()) {
+                            String text = result.getCandidates().get(0).getText();
+                            Log.d(TAG, "Kết quả nhận diện: " + text);
+                            listener.onResult(text);
+                        } else {
+                            Log.d(TAG, "Không nhận diện được ký tự nào.");
+                        }
                     }
                 })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Lỗi trong quá trình nhận diện: " + e.getMessage());
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e(TAG, "Lỗi trong quá trình nhận diện: " + e.getMessage());
+                    }
                 });
     }
 
