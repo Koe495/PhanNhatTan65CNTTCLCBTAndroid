@@ -35,4 +35,12 @@ public class Particle {
     public boolean isDead() {
         return alpha <= 0;
     }
+
+    public void reset(float x, float y, int color, float size) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.size = size;
+        this.alpha = 255;
+    }
 }

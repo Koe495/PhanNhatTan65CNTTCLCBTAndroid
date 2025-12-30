@@ -25,7 +25,7 @@ import java.util.Random;
 public class GameView extends View {
 
     // --- CONSTANTS ---
-    private static final String ENEMIES_CHARS = "_()^ZNMv";
+    private static final String ENEMIES_CHARS = "_()^ZNMSv";
     private static final String TARGET_FULL = "helloworld";
     private static final int PHASE_SKIP_DIFF = 40;
     private static final long BASE_SPAWN_DELAY = 2000;
@@ -42,6 +42,7 @@ public class GameView extends View {
     // --- GAME OBJECTS ---
     private ArrayList<FallingChar> fallingChars = new ArrayList<>();
     private ArrayList<Particle> particles = new ArrayList<>();
+    private ArrayList<Particle> particlePool = new ArrayList<>();
     private Path currentPath = new Path();
 
     // --- GAME STATE ---
@@ -83,7 +84,7 @@ public class GameView extends View {
     private Runnable clearPathRunnable = new Runnable() {
         @Override
         public void run() {
-            currentPath.reset();
+            currentPath.rewind();
             invalidate();
         }
     };
@@ -329,7 +330,15 @@ public class GameView extends View {
         while (pIter.hasNext()) {
             Particle p = pIter.next();
             p.update();
-            if (p.isDead()) pIter.remove();
+            if (p.isDead()) {
+                pIter.remove();
+
+                // Cất vào kho để dành dùng lại
+                // Giới hạn pool khoảng 100 hạt để không tốn RAM vô ích
+                if (particlePool.size() < 100) {
+                    particlePool.add(p);
+                }
+            }
         }
 
         // 2. QTE Logic (Undertale Mode)
@@ -485,7 +494,7 @@ public class GameView extends View {
     // --- HÀM HỖ TRỢ XÓA NÉT VẼ NGAY LẬP TỨC ---
     private void resetPathInstantly() {
         uiHandler.removeCallbacks(clearPathRunnable); // Hủy lệnh xóa trễ nếu có
-        currentPath.reset();
+        currentPath.rewind();
         invalidate();
     }
 
@@ -698,6 +707,7 @@ public class GameView extends View {
                 case ")": return textRaw.equals(")") || textRaw.equals(">") || textRaw.equals("]") || textRaw.equals("J") || textRaw.equals("j");
                 case "v": return textRaw.equals("U") || textRaw.equals("v") || textRaw.equals("V");
                 case "/": return textRaw.equals("/") || textRaw.equals("1") || textRaw.equals("l") || textUpper.equals("I");
+                case "S": return textRaw.equals("S") || textRaw.equals("s") || textRaw.equals("5");
                 default: return enemy.equals(textUpper);
             }
         }
@@ -733,10 +743,25 @@ public class GameView extends View {
     }
 
     public void spawnExplosion(float x, float y, int color, int count, float sizeBase) {
-        // Giới hạn số lượng hạt nổ để tránh lag nếu spam nhiều
         int safeCount = Math.min(count, 20);
         for (int i = 0; i < safeCount; i++) {
-            particles.add(new Particle(x, y, color, sizeBase + random.nextInt(10)));
+            Particle p = getParticleFromPool();
+
+            if (p == null) {
+                particles.add(new Particle(x, y, color, sizeBase + random.nextInt(10)));
+            } else {
+                // Tái sử dụng hạt cũ
+                p.reset(x, y, color, sizeBase + random.nextInt(10));
+                particles.add(p);
+            }
+        }
+    }
+    private Particle getParticleFromPool() {
+        if (particlePool.isEmpty()) {
+            return null;
+        } else {
+            // Lấy hạt cuối cùng ra khỏi kho để dùng
+            return particlePool.remove(particlePool.size() - 1);
         }
     }
 
