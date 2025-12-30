@@ -23,8 +23,9 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginBottom="12dp"
-            android:letterSpacing="0.2"
+            android:letterSpacing="0.1"
             android:text="JUDGEMENT"
+            android:textAlignment="center"
             android:textColor="#FFFFFF"
             android:textSize="32sp"
             android:textStyle="bold" />
@@ -49,29 +50,29 @@
             android:layout_marginBottom="16dp"/>
 
         <!-- RECORDS -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            style="@style/Text.Divine.HighScore"
-            android:text="ARCHIVED SCRIPTURES"
-            android:textSize="13sp"
-            android:textStyle="italic"
-            android:letterSpacing="0.14"
-            android:textColor="#CCCCCC"
-            android:layout_gravity="center"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"/>
+<!--        <TextView-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            style="@style/Text.Divine.HighScore"-->
+<!--            android:text="ARCHIVED SCRIPTURES"-->
+<!--            android:textSize="13sp"-->
+<!--            android:textStyle="italic"-->
+<!--            android:letterSpacing="0.14"-->
+<!--            android:textColor="#CCCCCC"-->
+<!--            android:layout_gravity="center"-->
+<!--            android:layout_marginTop="8dp"-->
+<!--            android:layout_marginBottom="8dp"/>-->
 
-        <TextView
-            android:id="@+id/tvHighScoreList"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            style="@style/Text.Divine.HighScore"
-            android:text="01 · 72\n02 · 61\n03 · 45"
-            android:gravity="center"
-            android:lineSpacingExtra="6dp"
-            android:textColor="#EEEEEE"
-            android:layout_marginBottom="28dp"/>
+<!--        <TextView-->
+<!--            android:id="@+id/tvHighScoreList"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            style="@style/Text.Divine.HighScore"-->
+<!--            android:text="0 · 0"-->
+<!--            android:gravity="center"-->
+<!--            android:lineSpacingExtra="6dp"-->
+<!--            android:textColor="#EEEEEE"-->
+<!--            android:layout_marginBottom="28dp"/>-->
 
         <!-- ACTIONS -->
         <LinearLayout

@@ -466,11 +466,10 @@ public class MainActivity extends AppCompatActivity {
         TextView btnMenu = gameOverMenuView.findViewById(R.id.btnMenu);
 
         if (isWin) {
-            tvTitle.setText("YOU WIN!");
-            tvTitle.setTextColor(Color.GREEN);
+            tvTitle.setText("ABSOLUTION");
+            tvTitle.setTextColor(Color.parseColor("#E6D8A8"));
         } else {
-            tvTitle.setText("GAME OVER");
-            tvTitle.setTextColor(Color.RED);
+            tvTitle.setText("JUDGEMENT");
         }
         tvCurrentResult.setText("Purified · " + currentMaxDiff);
 
