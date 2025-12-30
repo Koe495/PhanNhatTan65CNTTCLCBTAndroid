@@ -473,6 +473,16 @@ public class MainActivity extends AppCompatActivity {
         }
         tvCurrentResult.setText("Purified · " + currentMaxDiff);
 
+        // Hiển thị xếp hạng
+
+        GameTheme currentTheme = themes.get(currentThemeIndex);
+        List<String> topScores = dbHelper.getTopScores(currentGameMode.toString(), currentTheme.name);
+        StringBuilder sb = new StringBuilder();
+        for (String s : topScores) {
+            sb.append(s).append("\n");
+        }
+        tvHighScoreList.setText(sb.toString());
+
         // Replay Button
         btnReplay.setOnClickListener(new View.OnClickListener() {
             @Override
