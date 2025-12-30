@@ -548,7 +548,7 @@ public class MainActivity extends AppCompatActivity {
 
         themes.add(new GameTheme("Undertale", Color.BLACK, Color.WHITE, Color.parseColor("#3f82f4"), R.font.undertale_sans, R.raw.undertale_phase1, R.raw.undertale_phase2, R.raw.pop, R.raw.pop2_undertale, R.raw.undertale_endless
         , Color.BLACK, Color.parseColor("#3f82f4"), Color.parseColor("#3f82f4"), Color.WHITE, Color.parseColor("#3f82f4"), Color.WHITE, Color.WHITE));
-        themes.add(new GameTheme("Joker", Color.parseColor("#292929"), Color.parseColor("#B0818E"), Color.RED, R.font.imfellenglish_regular, R.raw.joker_menu_music, R.raw.joker_menu_music, R.raw.pop, R.raw.pop2, R.raw.joker_menu_music
+        themes.add(new GameTheme("Joker", Color.parseColor("#292929"), Color.parseColor("#B0818E"), Color.parseColor("#B0818E"), R.font.imfellenglish_regular, R.raw.joker_menu_music, R.raw.joker_menu_music, R.raw.pop, R.raw.pop2, R.raw.joker_menu_music
         , Color.parseColor("#292929"), Color.parseColor("#B0818E"), Color.parseColor("#B0818E"), Color.parseColor("#B0818E"), Color.parseColor("#B0818E"), Color.parseColor("#B0818E"), Color.parseColor("#B0818E")));
     }
 
