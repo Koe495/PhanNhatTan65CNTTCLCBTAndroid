@@ -31,6 +31,7 @@ public class GameView extends View {
     private static final long BASE_SPAWN_DELAY = 2000;
     private static final long JOKER_SPAWN_DELAY = 1000;
     private static final int TARGET_SPAWN_RATE = 20;
+    private static final int QTE_DAMAGE = 5;
 
     // --- PAINTS ---
     private Paint textPaint = new Paint();
@@ -237,7 +238,7 @@ public class GameView extends View {
         }
 
         if (currentMode == GameMode.ENDLESS) {
-            diff = 20;
+            diff = 30;
             gamePhase = 2;
         } else {
             diff = 0;
@@ -259,24 +260,31 @@ public class GameView extends View {
             qteManager = new QTEManager(getContext(), w, h);
             qteManager.setSoundManager(soundManager);
 
-            qteManager.setListener(new QTEManager.QTEListener() {
-                @Override
-                public void onLaserFire(Path laserPath) {
-                    handleLaserCollision(laserPath);
+            qteManager.setListener(createQTEListener());
+        }
+    }
+    private QTEManager.QTEListener createQTEListener() {
+        return new QTEManager.QTEListener() {
+            @Override
+            public void onLaserFire(Path laserPath) {
+                handleLaserCollision(laserPath);
+            }
+
+            @Override
+            public void onQTEFail() {
+
+                score -= QTE_DAMAGE;
+
+                if (listener != null) listener.onScoreUpdate(score);
+
+                if (score <= 0) {
+                    isGameOver = true;
+                    if (listener != null) listener.onGameOver();
                 }
 
-                @Override
-                public void onQTEFail() {
-                    score -= 5;
-                    if (listener != null) listener.onScoreUpdate(score);
-                    if (score <= 0) {
-                        isGameOver = true;
-                        if (listener != null) listener.onGameOver();
-                    }
-                    spawnExplosion(screenWidth/2, screenHeight/2, Color.RED, 50, 20);
-                }
-            });
-        }
+                spawnExplosion(screenWidth / 2, screenHeight / 2, Color.RED, 50, 20);
+            }
+        };
     }
 
     private void handleLaserCollision(Path laserPath) {
@@ -325,7 +333,7 @@ public class GameView extends View {
     }
 
     private void updateGame() {
-        // 1. Update Particles
+        // Update Particles
         Iterator<Particle> pIter = particles.iterator();
         while (pIter.hasNext()) {
             Particle p = pIter.next();
@@ -341,14 +349,14 @@ public class GameView extends View {
             }
         }
 
-        // 2. QTE Logic (Undertale Mode)
-        if (qteManager != null && currentMode == GameMode.ENDLESS && currentTheme.name.equalsIgnoreCase("Undertale")) {
+        // QTE Logic Undertale Mode
+        if (!isPaused && qteManager != null && currentMode == GameMode.ENDLESS && currentTheme.name.equalsIgnoreCase("Undertale")) {
             qteManager.update(0.0166667f);
         }
 
         if (isPaused) return;
 
-        // 3. Game Logic (Joker hoặc Classic)
+        // Game Joker hoặc Classic
         if (isJokerMode) {
             int damage = jokerLogic.update(screenHeight);
 
@@ -356,27 +364,27 @@ public class GameView extends View {
             if (jokerLogic.getBoss() != null && jokerLogic.getBoss().hp <= 0) {
 
                 if (currentMode == GameMode.ENDLESS) {
-                    // --- LOGIC ENDLESS MỚI ---
+                    // --- LOGIC ENDLESS ---
 
-                    // 1. Tính HP mới (gấp 1.2 lần)
+                    // Tính HP hồi sinh
                     int oldMax = jokerLogic.getBoss().maxHp;
                     int newMax = (int)(oldMax * 1.2f);
 
-                    // 2. Hồi sinh Boss
+                    // Hồi sinh Boss
                     jokerLogic.getBoss().revive(newMax);
 
-                    // 3. Tăng HP cho người chơi (+1)
+                    // Tăng HP cho người chơi
                     score++;
                     if (listener != null) listener.onScoreUpdate(score);
 
-                    // 4. Hiệu ứng (Nổ + Thông báo)
+                    // Hiệu ứng
                     spawnExplosion(screenWidth/2, 200, Color.YELLOW, 20, 20);
 
-                    // 5. Play Sound heal (nếu có)
+                    // Play Sound heal
                     if (soundManager != null) soundManager.playHeal();
 
                 } else {
-                    // --- LOGIC CLASSIC CŨ ---
+                    // --- LOGIC CLASSIC---
                     if (!isVictory) {
                         isVictory = true;
                         isGameOver = true;
@@ -572,6 +580,8 @@ public class GameView extends View {
             if (hit) {
                 anyHit = true;
                 if (soundManager != null) soundManager.playExplodeNormal();
+                diff++;
+                if (listener != null) listener.onDiffUpdate(diff);
             }
         } else {
             Iterator<FallingChar> iter = fallingChars.iterator();
@@ -630,21 +640,7 @@ public class GameView extends View {
             qteManager = new QTEManager(getContext(), screenWidth, screenHeight);
             qteManager.setSoundManager(soundManager);
 
-            qteManager.setListener(new QTEManager.QTEListener() {
-                @Override
-                public void onLaserFire(Path laserPath) {
-                    handleLaserCollision(laserPath);
-                }
-                @Override
-                public void onQTEFail() {
-                    score -= 5;
-                    if (listener != null) listener.onScoreUpdate(score);
-                    if (score <= 0) {
-                        isGameOver = true;
-                        if (listener != null) listener.onGameOver();
-                    }
-                }
-            });
+            qteManager.setListener(createQTEListener());
         }
 
         if (isJokerMode && jokerLogic != null) {

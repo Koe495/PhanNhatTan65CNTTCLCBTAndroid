@@ -512,6 +512,7 @@ public class MainActivity extends AppCompatActivity {
         GameTheme theme = themes.get(currentThemeIndex);
         if (currentGameMode == GameMode.ENDLESS) {
             soundManager.playBackground(theme.musicEndlessId);
+            tvScore.setText("HP: 10");
         } else {
             soundManager.playBackground(theme.musicResId);
         }
@@ -729,7 +730,7 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        tvScore.setText("Score: " + score);
+                        tvScore.setText("HP: " + score);
                     }
                 });
             }
@@ -759,10 +760,9 @@ public class MainActivity extends AppCompatActivity {
                         if (soundManager != null) {
                             soundManager.stopBackground();
                             if (dbHelper != null) {
-                                // TRUYỀN THÊM: selectedTheme.name
                                 dbHelper.addHighScore(gameView.getScore(), currentMaxDiff, currentGameMode.toString(), selectedTheme.name);
                             }
-                            // soundManager.playWinSound(); // Nếu có âm thanh thắng cuộc
+                            // soundManager.playWinSound();
                         }
                         showGameOverDialog(true);
                     }

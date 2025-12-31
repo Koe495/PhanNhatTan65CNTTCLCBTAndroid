@@ -62,17 +62,24 @@ public class HighScoreDbHelper extends SQLiteOpenHelper {
         db.close();
     }
 
-    // Cập nhật hàm lấy điểm: Lọc theo cả Mode và Theme
+    // hàm lấy điểm: Lọc theo cả Mode và Theme
     public List<String> getTopScores(String mode, String themeName) {
         List<String> scores = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
 
         String orderBy;
 
-        // Logic sắp xếp giữ nguyên
-        if (mode.equalsIgnoreCase("CLASSIC")) {
+        // --- LOGIC SẮP XẾP ---
+        if (themeName.equalsIgnoreCase("Joker")) {
+            // Joker Mode: HP cao, Diff thấp
             orderBy = COL_HP + " DESC, " + COL_DIFF + " ASC";
-        } else {
+        }
+        else if (mode.equalsIgnoreCase("CLASSIC")) {
+            // Classic: HP cao, Diff thấp
+            orderBy = COL_HP + " DESC, " + COL_DIFF + " ASC";
+        }
+        else {
+            // Endless: Diff cao, HP cao
             orderBy = COL_DIFF + " DESC, " + COL_HP + " DESC";
         }
 
@@ -83,7 +90,7 @@ public class HighScoreDbHelper extends SQLiteOpenHelper {
                 new String[]{mode, themeName},
                 null, null,
                 orderBy,
-                "5"
+                "5" // Top 5
         );
 
         if (cursor != null && cursor.moveToFirst()) {
@@ -92,7 +99,8 @@ public class HighScoreDbHelper extends SQLiteOpenHelper {
                 int hpVal = cursor.getInt(cursor.getColumnIndexOrThrow(COL_HP));
                 int diffVal = cursor.getInt(cursor.getColumnIndexOrThrow(COL_DIFF));
 
-                if (mode.equalsIgnoreCase("CLASSIC")) {
+                // Định dạng hiển thị: Joker và Classic ưu tiên hiển thị HP trước
+                if (themeName.equalsIgnoreCase("Joker") || mode.equalsIgnoreCase("CLASSIC")) {
                     scores.add("#" + rank + " - HP: " + hpVal + " (Diff: " + diffVal + ")");
                 } else {
                     scores.add("#" + rank + " - Diff: " + diffVal + " (HP: " + hpVal + ")");
@@ -101,7 +109,7 @@ public class HighScoreDbHelper extends SQLiteOpenHelper {
             } while (cursor.moveToNext());
             cursor.close();
         } else {
-            scores.add("who?");
+            scores.add("Who?");
         }
         db.close();
         return scores;
