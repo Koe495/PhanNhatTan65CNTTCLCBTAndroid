@@ -505,7 +505,7 @@ public class GameView extends View {
         if (gestureDetector.onTouchEvent(event)) {
             inkBuilder = Ink.builder();
             strokeBuilder = null;
-            resetPathInstantly(); // Xóa ngay nếu detect double/triple tap
+            resetPathInstantly(); // Xóa ngay nét vẽ
             return true;
         }
 

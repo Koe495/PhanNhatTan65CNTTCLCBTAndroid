@@ -38,7 +38,7 @@ public class RecognitionManager {
         if (modelIdentifier != null) {
             model = DigitalInkRecognitionModel.builder(modelIdentifier).build();
 
-            // Tạo Client nhận diện
+            // Tạo client nhận diện
             DigitalInkRecognizerOptions options = DigitalInkRecognizerOptions.builder(model).build();
             recognizer = DigitalInkRecognition.getClient(options);
         }
@@ -56,7 +56,7 @@ public class RecognitionManager {
                             Log.d(TAG, "Model đã có sẵn, sẵn sàng sử dụng.");
                         } else {
                             // Chưa có thì tải về
-                            Log.d(TAG, "Đang tải model xuống (v19)...");
+                            Log.d(TAG, "Đang tải model xuống");
 
                             DownloadConditions conditions = new DownloadConditions.Builder()
                                     .build();
@@ -88,7 +88,7 @@ public class RecognitionManager {
     // Hàm nhận diện
     public void recognize(Ink ink, final RecognitionListener listener) {
         if (recognizer == null) {
-            Log.e(TAG, "Recognizer chưa khởi tạo (Do lỗi model identifier).");
+            Log.e(TAG, "Recognizer chưa khởi tạo do lỗi model identifier");
             return;
         }
 

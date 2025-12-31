@@ -60,7 +60,12 @@ public class JokerGameLogic {
         initSuitIcons();
 
         int initialBossHp = (mode == GameMode.ENDLESS) ? 50 : 250;
-        boss = new JokerBoss(context, initialBossHp, R.drawable.joker_boss_1);
+        boss = new JokerBoss(
+                context,
+                initialBossHp,
+                R.drawable.joker_boss_1, // Ảnh bình thường
+                R.drawable.joker_boss_2  // Ảnh khi < 50% máu
+        );
     }
 
     // Hàm tiện ích để báo cập nhật UI
